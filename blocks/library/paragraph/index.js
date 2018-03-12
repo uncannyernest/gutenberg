@@ -16,7 +16,6 @@ import {
 } from '@wordpress/element';
 import {
 	PanelBody,
-	PanelColor,
 	RangeControl,
 	ToggleControl,
 	Button,
@@ -37,8 +36,8 @@ import BlockAlignmentToolbar from '../../block-alignment-toolbar';
 import BlockControls from '../../block-controls';
 import RichText from '../../rich-text';
 import InspectorControls from '../../inspector-controls';
-import ColorPalette from '../../color-palette';
 import ContrastChecker from '../../contrast-checker';
+import PanelColor from '../../panel-color';
 
 const { getComputedStyle } = window;
 
@@ -198,18 +197,16 @@ class ParagraphBlock extends Component {
 							onChange={ this.toggleDropCap }
 						/>
 					</PanelBody>
-					<PanelColor title={ __( 'Background Color' ) } colorValue={ backgroundColor } initialOpen={ false }>
-						<ColorPalette
-							value={ backgroundColor }
-							onChange={ ( colorValue ) => setAttributes( { backgroundColor: colorValue } ) }
-						/>
-					</PanelColor>
-					<PanelColor title={ __( 'Text Color' ) } colorValue={ textColor } initialOpen={ false }>
-						<ColorPalette
-							value={ textColor }
-							onChange={ ( colorValue ) => setAttributes( { textColor: colorValue } ) }
-						/>
-					</PanelColor>
+					<PanelColor
+						title={ __( 'Background Color' ) }
+						value={ backgroundColor }
+						onChange={ ( colorValue ) => setAttributes( { backgroundColor: colorValue } ) }
+					/>
+					<PanelColor
+						title={ __( 'Text Color' ) }
+						onChange={ ( colorValue ) => setAttributes( { textColor: colorValue } ) }
+						value={ textColor }
+					/>
 					<ContrastChecker
 						{ ...{
 							textColor,

@@ -7,7 +7,6 @@ import {
 	Dashicon,
 	IconButton,
 	PanelBody,
-	PanelColor,
 	ToggleControl,
 	withFallbackStyles,
 } from '@wordpress/components';
@@ -21,8 +20,8 @@ import RichText from '../../rich-text';
 import UrlInput from '../../url-input';
 import BlockControls from '../../block-controls';
 import BlockAlignmentToolbar from '../../block-alignment-toolbar';
-import ColorPalette from '../../color-palette';
 import ContrastChecker from '../../contrast-checker';
+import PanelColor from '../../panel-color';
 import InspectorControls from '../../inspector-controls';
 
 const { getComputedStyle } = window;
@@ -109,24 +108,24 @@ class ButtonBlock extends Component {
 								checked={ !! clear }
 								onChange={ this.toggleClear }
 							/>
-							<PanelColor title={ __( 'Background Color' ) } colorValue={ color } >
-								<ColorPalette
-									value={ color }
-									onChange={ ( colorValue ) => setAttributes( { color: colorValue } ) }
+							<PanelColor
+								title={ __( 'Background Color' ) }
+								value={ color }
+								onChange={ ( colorValue ) => setAttributes( { color: colorValue } ) }
+							/>
+							<PanelColor
+								title={ __( 'Text Color' ) }
+								onChange={ ( colorValue ) => setAttributes( { textColor: colorValue } ) }
+								value={ textColor }
+							/>
+							{ this.nodeRef &&
+								<ContrastCheckerWithFallbackStyles
+									node={ this.nodeRef }
+									textColor={ textColor }
+									backgroundColor={ color }
+									isLargeText={ true }
 								/>
-							</PanelColor>
-							<PanelColor title={ __( 'Text Color' ) } colorValue={ textColor } >
-								<ColorPalette
-									value={ textColor }
-									onChange={ ( colorValue ) => setAttributes( { textColor: colorValue } ) }
-								/>
-							</PanelColor>
-							{ this.nodeRef && <ContrastCheckerWithFallbackStyles
-								node={ this.nodeRef }
-								textColor={ textColor }
-								backgroundColor={ color }
-								isLargeText={ true }
-							/> }
+							}
 						</PanelBody>
 					</InspectorControls>
 				}

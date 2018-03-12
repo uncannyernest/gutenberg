@@ -44,20 +44,20 @@ exports[`ColorPalette Dropdown .renderToggle should render dropdown content 1`] 
 <button
   aria-expanded={true}
   aria-label="Custom color picker"
-  className="blocks-color-palette__item"
+  className="components-color-palette__item"
   onClick={[MockFunction]}
   type="button"
 >
   <span
-    className="blocks-color-palette__custom-color-gradient"
+    className="components-color-palette__custom-color-gradient"
   />
 </button>
 `;
 
 exports[`ColorPalette Dropdown should render it correctly 1`] = `
 <Dropdown
-  className="blocks-color-palette__item-wrapper blocks-color-palette__custom-color"
-  contentClassName="blocks-color-palette__picker "
+  className="components-color-palette__item-wrapper components-color-palette__custom-color"
+  contentClassName="components-color-palette__picker "
   renderContent={[Function]}
   renderToggle={[Function]}
 />
@@ -65,16 +65,16 @@ exports[`ColorPalette Dropdown should render it correctly 1`] = `
 
 exports[`ColorPalette should allow disabling custom color picker 1`] = `
 <div
-  className="blocks-color-palette"
+  className="components-color-palette"
 >
   <div
-    className="blocks-color-palette__item-wrapper"
+    className="components-color-palette__item-wrapper"
     key="red"
   >
     <button
       aria-label="Color: red"
       aria-pressed={true}
-      className="blocks-color-palette__item is-active"
+      className="components-color-palette__item is-active"
       onClick={[Function]}
       style={
         Object {
@@ -85,13 +85,13 @@ exports[`ColorPalette should allow disabling custom color picker 1`] = `
     />
   </div>
   <div
-    className="blocks-color-palette__item-wrapper"
+    className="components-color-palette__item-wrapper"
     key="white"
   >
     <button
       aria-label="Color: white"
       aria-pressed={false}
-      className="blocks-color-palette__item"
+      className="components-color-palette__item"
       onClick={[Function]}
       style={
         Object {
@@ -102,13 +102,13 @@ exports[`ColorPalette should allow disabling custom color picker 1`] = `
     />
   </div>
   <div
-    className="blocks-color-palette__item-wrapper"
+    className="components-color-palette__item-wrapper"
     key="blue"
   >
     <button
       aria-label="Color: blue"
       aria-pressed={false}
-      className="blocks-color-palette__item"
+      className="components-color-palette__item"
       onClick={[Function]}
       style={
         Object {
@@ -119,7 +119,7 @@ exports[`ColorPalette should allow disabling custom color picker 1`] = `
     />
   </div>
   <button
-    className="button-link blocks-color-palette__clear"
+    className="button-link components-color-palette__clear"
     onClick={[Function]}
     type="button"
   >
@@ -130,16 +130,16 @@ exports[`ColorPalette should allow disabling custom color picker 1`] = `
 
 exports[`ColorPalette should render a dynamic toolbar of colors 1`] = `
 <div
-  className="blocks-color-palette"
+  className="components-color-palette"
 >
   <div
-    className="blocks-color-palette__item-wrapper"
+    className="components-color-palette__item-wrapper"
     key="red"
   >
     <button
       aria-label="Color: red"
       aria-pressed={true}
-      className="blocks-color-palette__item is-active"
+      className="components-color-palette__item is-active"
       onClick={[Function]}
       style={
         Object {
@@ -150,13 +150,13 @@ exports[`ColorPalette should render a dynamic toolbar of colors 1`] = `
     />
   </div>
   <div
-    className="blocks-color-palette__item-wrapper"
+    className="components-color-palette__item-wrapper"
     key="white"
   >
     <button
       aria-label="Color: white"
       aria-pressed={false}
-      className="blocks-color-palette__item"
+      className="components-color-palette__item"
       onClick={[Function]}
       style={
         Object {
@@ -167,13 +167,13 @@ exports[`ColorPalette should render a dynamic toolbar of colors 1`] = `
     />
   </div>
   <div
-    className="blocks-color-palette__item-wrapper"
+    className="components-color-palette__item-wrapper"
     key="blue"
   >
     <button
       aria-label="Color: blue"
       aria-pressed={false}
-      className="blocks-color-palette__item"
+      className="components-color-palette__item"
       onClick={[Function]}
       style={
         Object {
@@ -184,13 +184,13 @@ exports[`ColorPalette should render a dynamic toolbar of colors 1`] = `
     />
   </div>
   <Dropdown
-    className="blocks-color-palette__item-wrapper blocks-color-palette__custom-color"
-    contentClassName="blocks-color-palette__picker "
+    className="components-color-palette__item-wrapper components-color-palette__custom-color"
+    contentClassName="components-color-palette__picker "
     renderContent={[Function]}
     renderToggle={[Function]}
   />
   <button
-    className="button-link blocks-color-palette__clear"
+    className="button-link components-color-palette__clear"
     onClick={[Function]}
     type="button"
   >
