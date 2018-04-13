@@ -199,7 +199,8 @@ export function getPhrasingContentSchema() {
 	return phrasingContentSchema;
 }
 
-export function getContentSchema( { iframe } = { iframe: true } ) {
+export function getContentSchema( settings = {} ) {
+	const { iframe = true } = settings;
 	const children = contentSchema.figure.children;
 
 	return {
