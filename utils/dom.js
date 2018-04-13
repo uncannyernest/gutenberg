@@ -448,7 +448,7 @@ export function insertAfter( newNode, referenceNode ) {
 }
 
 /**
- * Unwrap the givin node. This means any child nodes are moved to the parent.
+ * Unwrap the given node. This means any child nodes are moved to the parent.
  *
  * @param {Node} node The node to unwrap.
  *
