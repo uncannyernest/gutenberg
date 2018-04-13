@@ -124,6 +124,7 @@ const blockContentSchema = {
 		children: phrasingContentSchema,
 	},
 	figure: {
+		requireSome: Object.keys( embeddedContentSchema ),
 		children: {
 			...embeddedContentSchema,
 			figcaption: {
@@ -360,7 +361,7 @@ function cleanNodeList( nodeList, schema, doc ) {
 		// It's a valid child.
 		if ( schema.hasOwnProperty( tag ) ) {
 			if ( node.nodeType === ELEMENT_NODE ) {
-				const { attributes = [], classes = [], children } = schema[ tag ];
+				const { attributes = [], classes = [], children, requireSome = [] } = schema[ tag ];
 
 				// If the node is empty and it's supposed to have children,
 				// remove the node.
@@ -394,6 +395,18 @@ function cleanNodeList( nodeList, schema, doc ) {
 				if ( node.hasChildNodes() ) {
 					// Contine if the node is supposed to have children.
 					if ( children ) {
+						// If a parent requires certain children, but it does
+						// not have them, drop the parent and continue.
+						if (
+							requireSome.length &&
+							! Array.from( node.childNodes ).some( ( child ) =>
+								includes( requireSome, child.nodeName.toLowerCase() )
+							)
+						) {
+							cleanNodeList( node.childNodes, schema, doc );
+							unwrap( node );
+						}
+
 						cleanNodeList( node.childNodes, children, doc );
 					// Remove children if the node is not supposed to have any.
 					} else {
