@@ -130,4 +130,10 @@ describe( 'removeInvalidHTML', () => {
 		const output = 'test<br>test';
 		equal( removeInvalidHTML( input, getPhrasingContentSchema() ), output );
 	} );
+
+	it( 'should unwrap node that does not satisfy requireSome', () => {
+		const input = '<figure><p>test</p><figcaption>test</figcaption></figure>';
+		const output = '<p>test</p>test';
+		equal( removeInvalidHTML( input, getContentSchema() ), output );
+	} );
 } );
