@@ -19,8 +19,7 @@ export default function( node, doc ) {
 	}
 
 	if ( node.nodeName === 'SPAN' ) {
-		const fontWeight = node.style.fontWeight;
-		const fontStyle = node.style.fontStyle;
+		const { fontWeight, fontStyle } = node.style;
 
 		if ( fontWeight === 'bold' || fontWeight === '700' ) {
 			node = replaceTag( node, 'strong', doc );
