@@ -158,9 +158,10 @@ describe( 'Change detection', () => {
 		await page.type( '.editor-post-title__input', '!' );
 
 		// Allow save to complete. Disabling interception flushes pending.
-		await releaseSaveIntercept();
-
-		await page.waitForSelector( '.editor-post-saved-state.is-saved' );
+		await Promise.all( [
+			page.waitForSelector( '.editor-post-saved-state.is-saved' ),
+			releaseSaveIntercept(),
+		] );
 
 		await assertIsDirty( true );
 	} );
@@ -180,8 +181,10 @@ describe( 'Change detection', () => {
 		await page.click( '.editor-default-block-appender' );
 
 		// Allow save to complete. Disabling interception flushes pending.
-		await releaseSaveIntercept();
-		await page.waitForSelector( '.editor-post-saved-state.is-saved' );
+		await Promise.all( [
+			page.waitForSelector( '.editor-post-saved-state.is-saved' ),
+			releaseSaveIntercept(),
+		] );
 
 		await assertIsDirty( true );
 	} );
