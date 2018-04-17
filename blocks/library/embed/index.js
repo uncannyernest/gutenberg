@@ -153,13 +153,11 @@ function getEmbedBlockSettings( { title, icon, category = 'embed', transforms, k
 							if ( this.unmounting ) {
 								return;
 							}
-							// Some plugins put the embed html in `result`, so get the right one here.
-							const html = obj.html ? obj.html : obj.result;
 							// Some plugins only return HTML with no type info, so default this to 'rich'.
 							let { type = 'rich' } = obj;
 							// If we got a provider name from the API, use it for the slug, otherwise we use the title,
 							// because not all embed code gives us a provider name.
-							const { provider_name: providerName } = obj;
+							const { html, provider_name: providerName } = obj;
 							const providerNameSlug = kebabCase( toLower( '' !== providerName ? providerName : title ) );
 
 							// This indicates it's a WordPress embed, there aren't a set of URL patterns we can use to match WordPress URLs.
