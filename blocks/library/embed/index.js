@@ -132,9 +132,8 @@ function getEmbedBlockSettings( { title, icon, category = 'embed', transforms, k
 				const { url } = this.props.attributes;
 				const { setAttributes } = this.props;
 
-				// If we don't have any URL patterns, or we do and the URL doesn't match,
-				// then we should look for a block that has a matching URL pattern.
-				if ( ! patterns || ( patterns && ! matchesPatterns( url, patterns ) ) ) {
+				// If the URL doesn't match this block's patterns, then we should look for a block that has a matching URL pattern.
+				if ( ! matchesPatterns( url, patterns ) ) {
 					const matchingBlock = findBlock( url );
 					// WordPress blocks can work on multiple sites, and so don't have patterns,
 					// so if we're in a WordPress block, assume the user has chosen it for a WordPress URL.
