@@ -15,6 +15,8 @@ describe( 'Change detection', () => {
 		await newPost();
 	} );
 
+	const MOD_KEY = process.platform === 'darwin' ? 'Meta' : 'Control';
+
 	async function assertIsDirty( isDirty ) {
 		let hadDialog = false;
 
@@ -76,9 +78,9 @@ describe( 'Change detection', () => {
 			page.waitForSelector( '.editor-post-saved-state.is-saved' ),
 
 			// Keyboard shortcut Ctrl+S save.
-			page.keyboard.down( 'Meta' ),
+			page.keyboard.down( MOD_KEY ),
 			page.keyboard.press( 'S' ),
-			page.keyboard.up( 'Meta' ),
+			page.keyboard.up( MOD_KEY ),
 		] );
 
 		await assertIsDirty( false );
@@ -90,9 +92,9 @@ describe( 'Change detection', () => {
 		await page.setOfflineMode( true );
 
 		// Keyboard shortcut Ctrl+S save.
-		await page.keyboard.down( 'Meta' );
+		await page.keyboard.down( MOD_KEY );
 		await page.keyboard.press( 'S' );
-		await page.keyboard.up( 'Meta' );
+		await page.keyboard.up( MOD_KEY );
 
 		// Ensure save update fails and presents button.
 		await page.waitForXPath( '//p[contains(text(), \'Updating failed\')]' );
@@ -113,9 +115,9 @@ describe( 'Change detection', () => {
 		await interceptSave();
 
 		// Keyboard shortcut Ctrl+S save.
-		await page.keyboard.down( 'Meta' );
+		await page.keyboard.down( MOD_KEY );
 		await page.keyboard.press( 'S' );
-		await page.keyboard.up( 'Meta' );
+		await page.keyboard.up( MOD_KEY );
 
 		await releaseSaveIntercept();
 
@@ -131,9 +133,9 @@ describe( 'Change detection', () => {
 		await interceptSave();
 
 		// Keyboard shortcut Ctrl+S save.
-		await page.keyboard.down( 'Meta' );
+		await page.keyboard.down( MOD_KEY );
 		await page.keyboard.press( 'S' );
-		await page.keyboard.up( 'Meta' );
+		await page.keyboard.up( MOD_KEY );
 
 		await page.type( '.editor-post-title__input', '!' );
 
@@ -150,9 +152,9 @@ describe( 'Change detection', () => {
 		await interceptSave();
 
 		// Keyboard shortcut Ctrl+S save.
-		await page.keyboard.down( 'Meta' );
+		await page.keyboard.down( MOD_KEY );
 		await page.keyboard.press( 'S' );
-		await page.keyboard.up( 'Meta' );
+		await page.keyboard.up( MOD_KEY );
 
 		// Dirty post while save is in-flight.
 		await page.type( '.editor-post-title__input', '!' );
@@ -174,9 +176,9 @@ describe( 'Change detection', () => {
 		await interceptSave();
 
 		// Keyboard shortcut Ctrl+S save.
-		await page.keyboard.down( 'Meta' );
+		await page.keyboard.down( MOD_KEY );
 		await page.keyboard.press( 'S' );
-		await page.keyboard.up( 'Meta' );
+		await page.keyboard.up( MOD_KEY );
 
 		await page.click( '.editor-default-block-appender' );
 
