@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import { isEmbedded } from './utils';
+import { isPhrasingContent } from './utils';
 
 /**
  * Browser dependencies
@@ -9,19 +9,40 @@ import { isEmbedded } from './utils';
 const { ELEMENT_NODE } = window.Node;
 
 /**
+ * Whether or not the given node is embedded content.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_categories#Embedded_content
+ *
+ * @param {Node}   node   The node to check.
+ * @param {Object} schema The schema to use.
+ *
+ * @return {boolean} True if embedded content, false if not.
+ */
+function isEmbedded( node, schema ) {
+	const tag = node.nodeName.toLowerCase();
+
+	if ( ! schema.figure || tag === 'figcaption' || isPhrasingContent( node ) ) {
+		return false;
+	}
+
+	return schema.figure.children.hasOwnProperty( tag );
+}
+
+/**
  * This filter takes embedded content out of paragraphs.
  *
- * @param {Node}     node The node to filter.
- * @param {Document} doc  The document of the node.
+ * @param {Node}     node   The node to filter.
+ * @param {Document} doc    The document of the node.
+ * @param {Object}   schema The schema to use.
  *
  * @return {void}
  */
-export default function( node, doc ) {
+export default function( node, doc, schema ) {
 	if ( node.nodeType !== ELEMENT_NODE ) {
 		return;
 	}
 
-	if ( ! isEmbedded( node ) ) {
+	if ( ! isEmbedded( node, schema ) ) {
 		return;
 	}
 

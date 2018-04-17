@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { includes, omit } from 'lodash';
+import { omit } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -14,252 +14,78 @@ import { unwrap, insertAfter, remove } from '@wordpress/utils';
 const { ELEMENT_NODE, TEXT_NODE } = window.Node;
 
 /**
- * An array of tag groups used by isInlineForTag function.
- * If tagName and nodeName are present in the same group, the node should be treated as inline.
- * @type {Array}
- */
-const phrasingContentTagGroups = [
-	[ 'ul', 'li', 'ol' ],
-	[ 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ],
-];
-
-/**
- * Schema of possible paths for phrasing content.
+ * Get schema of possible paths for phrasing content.
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_categories#Phrasing_content
  *
- * @type {Object}
+ * @return {Object} Schema.
  */
-const phrasingContentSchema = {
-	strong: {},
-	em: {},
-	del: {},
-	ins: {},
-	a: { attributes: [ 'href' ] },
-	code: {},
-	abbr: { attributes: [ 'title' ] },
-	sub: {},
-	sup: {},
-	br: {},
-	'#text': {},
-};
-
-// Recursion is needed.
-// Possible: strong > em > strong.
-// Impossible: strong > strong.
-[ 'strong', 'em', 'del', 'ins', 'a', 'code', 'abbr', 'sub', 'sup' ].forEach( ( tag ) => {
-	phrasingContentSchema[ tag ].children = omit( phrasingContentSchema, tag );
-} );
-
-/**
- * Schema of possible paths for list content.
- *
- * @type {Object}
- */
-const listContentSchema = {
-	...phrasingContentSchema,
-	ul: {},
-	ol: { attributes: [ 'type' ] },
-};
-
-// Recursion is needed.
-// Possible: ul > li > ul.
-// Impossible: ul > ul.
-[ 'ul', 'ol' ].forEach( ( tag ) => {
-	listContentSchema[ tag ].children = {
-		li: {
-			children: listContentSchema,
-		},
-	};
-} );
-
-/**
- * Schema of possible paths for embedded content.
- *
- * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_categories#Embedded_content
- *
- * @type {Object}
- */
-const embeddedContentSchema = {
-	img: {
-		attributes: [ 'src', 'alt' ],
-		classes: [ 'alignleft', 'aligncenter', 'alignright', 'alignnone' ],
-	},
-	iframe: {
-		attributes: [ 'src', 'allowfullscreen', 'height', 'width' ],
-	},
-};
-
-/**
- * Schema of possible paths for block content.
- *
- * @type {Object}
- */
-const blockContentSchema = {
-	'wp-block': { attributes: 'data-block' },
-	ol: listContentSchema.ol,
-	ul: listContentSchema.ul,
-	h1: {
-		children: phrasingContentSchema,
-	},
-	h2: {
-		children: phrasingContentSchema,
-	},
-	h3: {
-		children: phrasingContentSchema,
-	},
-	h4: {
-		children: phrasingContentSchema,
-	},
-	h5: {
-		children: phrasingContentSchema,
-	},
-	h6: {
-		children: phrasingContentSchema,
-	},
-	p: {
-		children: phrasingContentSchema,
-	},
-	pre: {
-		children: phrasingContentSchema,
-	},
-	figure: {
-		requireSome: Object.keys( embeddedContentSchema ),
-		children: {
-			...embeddedContentSchema,
-			figcaption: {
-				children: phrasingContentSchema,
-			},
-		},
-	},
-	blockquote: {},
-	hr: {},
-	table: {
-		children: {
-			thead: {
-				children: {
-					tr: {
-						children: {
-							th: {
-								children: phrasingContentSchema,
-							},
-							td: {
-								children: phrasingContentSchema,
-							},
-						},
-					},
-				},
-			},
-			tfoot: {
-				children: {
-					tr: {
-						children: {
-							th: {
-								children: phrasingContentSchema,
-							},
-							td: {
-								children: phrasingContentSchema,
-							},
-						},
-					},
-				},
-			},
-			tbody: {
-				children: {
-					tr: {
-						children: {
-							th: {
-								children: phrasingContentSchema,
-							},
-							td: {
-								children: phrasingContentSchema,
-							},
-						},
-					},
-				},
-			},
-		},
-	},
-};
-
-// A blockquote can contain any of the above.
-blockContentSchema.blockquote.children = omit( blockContentSchema, 'blockquote' );
-
-/**
- * Schema of possible paths for all content.
- *
- * @type {Object}
- */
-const contentSchema = {
-	...phrasingContentSchema,
-	...blockContentSchema,
-};
-
 export function getPhrasingContentSchema() {
+	const phrasingContentSchema = {
+		strong: {},
+		em: {},
+		del: {},
+		ins: {},
+		a: { attributes: [ 'href' ] },
+		code: {},
+		abbr: { attributes: [ 'title' ] },
+		sub: {},
+		sup: {},
+		br: {},
+		[ TEXT_NODE ]: {},
+	};
+
+	// Recursion is needed.
+	// Possible: strong > em > strong.
+	// Impossible: strong > strong.
+	[ 'strong', 'em', 'del', 'ins', 'a', 'code', 'abbr', 'sub', 'sup' ].forEach( ( tag ) => {
+		phrasingContentSchema[ tag ].children = omit( phrasingContentSchema, tag );
+	} );
+
 	return phrasingContentSchema;
 }
 
-export function getContentSchema( settings = {} ) {
-	const { iframe = true } = settings;
-	const children = contentSchema.figure.children;
-
-	return {
-		...contentSchema,
-		figure: {
-			...contentSchema.figure,
-			children: iframe ? children : omit( children, 'iframe' ),
-		},
-	};
-}
-
 /**
- * Checks if nodeName should be treated as inline when being added to tagName.
- * This happens if nodeName and tagName are in the same group defined in phrasingContentTagGroups.
+ * Find out whether or not the given node is phrasing content.
  *
- * @param {string} nodeName Node name.
- * @param {string} tagName  Tag name.
+ * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_categories#Phrasing_content
  *
- * @return {boolean} True if nodeName is inline in the context of tagName and
- *                    false otherwise.
+ * @param {Element} node The node to test.
+ *
+ * @return {boolean} True if phrasing content, false if not.
  */
-function isInlineForTag( nodeName, tagName ) {
-	if ( ! tagName || ! nodeName ) {
-		return false;
-	}
-	return phrasingContentTagGroups.some( ( tagGroup ) =>
-		includes( tagGroup, nodeName ) && includes( tagGroup, tagName )
-	);
-}
-
 export function isPhrasingContent( node ) {
-	const tagName = node.nodeName.toLowerCase();
-	return phrasingContentSchema.hasOwnProperty( tagName ) || tagName === 'span';
+	const tag = node.nodeName.toLowerCase();
+	return getPhrasingContentSchema().hasOwnProperty( tag ) || tag === 'span';
 }
 
-export function isInline( node, tagName ) {
-	const nodeName = node.nodeName.toLowerCase();
-	return isPhrasingContent( node ) || isInlineForTag( nodeName, tagName );
-}
+export function getBlockContentSchema( transforms ) {
+	return transforms.reduce( ( accu, { schema = {} } ) => {
+		Object.keys( schema ).forEach( ( tag ) => {
+			if ( accu[ tag ] ) {
+				if ( accu[ tag ].children || schema[ tag ].children ) {
+					accu[ tag ].children = {
+						...accu[ tag ].children,
+						...schema[ tag ].children,
+					};
+				}
 
-export function isBlockContent( node ) {
-	return blockContentSchema.hasOwnProperty( node.nodeName.toLowerCase() );
-}
+				accu[ tag ].attributes = [
+					...( accu[ tag ].attributes || [] ),
+					...( schema[ tag ].attributes || [] ),
+				];
 
-/**
- * Whether or not the given node is embedded content.
- *
- * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_categories#Embedded_content
- *
- * @param {Node} node The node to check.
- *
- * @return {boolean} True if embedded content, false if not.
- */
-export function isEmbedded( node ) {
-	return embeddedContentSchema.hasOwnProperty( node.nodeName.toLowerCase() );
-}
+				accu[ tag ].require = [
+					...( accu[ tag ].require || [] ),
+					...( schema[ tag ].require || [] ),
+				];
+			} else {
+				accu = { ...accu, [ tag ]: schema[ tag ] };
+			}
+		} );
 
-export function isDoubleBR( node ) {
-	return node.nodeName === 'BR' && node.previousSibling && node.previousSibling.nodeName === 'BR';
+		return accu;
+	}, {} );
 }
 
 export function isEmpty( element ) {
@@ -311,18 +137,19 @@ export function isPlain( HTML ) {
  * @param {NodeList} nodeList The nodeList to filter.
  * @param {Array}    filters  An array of functions that can mutate with the provided node.
  * @param {Document} doc      The document of the nodeList.
+ * @param {Object}   schema   The schema to use.
  */
-export function deepFilterNodeList( nodeList, filters, doc ) {
+export function deepFilterNodeList( nodeList, filters, doc, schema ) {
 	Array.from( nodeList ).forEach( ( node ) => {
-		deepFilterNodeList( node.childNodes, filters, doc );
+		deepFilterNodeList( node.childNodes, filters, doc, schema );
 
-		filters.forEach( ( filter ) => {
+		filters.forEach( ( item ) => {
 			// Make sure the node is still attached to the document.
 			if ( ! doc.contains( node ) ) {
 				return;
 			}
 
-			filter( node, doc );
+			item( node, doc, schema );
 		} );
 	} );
 }
@@ -333,15 +160,16 @@ export function deepFilterNodeList( nodeList, filters, doc ) {
  *
  * @param {string} HTML    The HTML to filter.
  * @param {Array}  filters An array of functions that can mutate with the provided node.
+ * @param {Object} schema  The schema to use.
  *
  * @return {string} The filtered HTML.
  */
-export function deepFilterHTML( HTML, filters = [] ) {
+export function deepFilterHTML( HTML, filters = [], schema ) {
 	const doc = document.implementation.createHTMLDocument( '' );
 
 	doc.body.innerHTML = HTML;
 
-	deepFilterNodeList( doc.body.childNodes, filters, doc );
+	deepFilterNodeList( doc.body.childNodes, filters, doc, schema );
 
 	return doc.body.innerHTML;
 }
@@ -351,18 +179,18 @@ export function deepFilterHTML( HTML, filters = [] ) {
  * list.
  *
  * @param {NodeList} nodeList The nodeList to filter.
- * @param {Object}   schema   An array of functions that can mutate with the
- *                            provided node.
  * @param {Document} doc      The document of the nodeList.
+ * @param {Object}   schema   An array of functions that can mutate with the provided node.
+ * @param {Object}   inline   Whether to clean for inline mode.
  */
-function cleanNodeList( nodeList, schema, doc ) {
+function cleanNodeList( nodeList, doc, schema, inline ) {
 	Array.from( nodeList ).forEach( ( node ) => {
 		const tag = node.nodeName.toLowerCase();
 
 		// It's a valid child.
-		if ( schema.hasOwnProperty( tag ) ) {
+		if ( schema.hasOwnProperty( tag ) || schema.hasOwnProperty( node.nodeType ) ) {
 			if ( node.nodeType === ELEMENT_NODE ) {
-				const { attributes = [], classes = [], children, requireSome = [] } = schema[ tag ];
+				const { attributes = [], classes = [], children, require = [] } = schema[ tag ];
 
 				// If the node is empty and it's supposed to have children,
 				// remove the node.
@@ -398,17 +226,12 @@ function cleanNodeList( nodeList, schema, doc ) {
 					if ( children ) {
 						// If a parent requires certain children, but it does
 						// not have them, drop the parent and continue.
-						if (
-							requireSome.length &&
-							! Array.from( node.childNodes ).some( ( child ) =>
-								includes( requireSome, child.nodeName.toLowerCase() )
-							)
-						) {
-							cleanNodeList( node.childNodes, schema, doc );
+						if ( require.length && ! node.querySelector( require.join( ',' ) ) ) {
+							cleanNodeList( node.childNodes, doc, schema, inline );
 							unwrap( node );
 						}
 
-						cleanNodeList( node.childNodes, children, doc );
+						cleanNodeList( node.childNodes, doc, children, inline );
 					// Remove children if the node is not supposed to have any.
 					} else {
 						while ( node.firstChild ) {
@@ -419,12 +242,11 @@ function cleanNodeList( nodeList, schema, doc ) {
 			}
 		// Invalid child. Continue with schema at the same place and unwrap.
 		} else {
-			cleanNodeList( node.childNodes, schema, doc );
+			cleanNodeList( node.childNodes, doc, schema, inline );
 
-			// If the node to unwrap is a block level node, and it has content
-			// following, insert a line break. Usually happens when cleaning
-			// with a schema for phrasing content (inline paste).
-			if ( blockContentSchema.hasOwnProperty( tag ) && node.nextElementSibling ) {
+			// For inline mode, insert a line break when unwrapping nodes that
+			// are not phrasing content.
+			if ( inline && ! isPhrasingContent( node ) && node.nextElementSibling ) {
 				insertAfter( doc.createElement( 'br' ), node );
 			}
 
@@ -438,15 +260,16 @@ function cleanNodeList( nodeList, schema, doc ) {
  *
  * @param {string} HTML   The HTML to clean up.
  * @param {Object} schema Schema for the HTML.
+ * @param {Object} inline Whether to clean for inline mode.
  *
  * @return {string} The cleaned up HTML.
  */
-export function removeInvalidHTML( HTML, schema ) {
+export function removeInvalidHTML( HTML, schema, inline ) {
 	const doc = document.implementation.createHTMLDocument( '' );
 
 	doc.body.innerHTML = HTML;
 
-	cleanNodeList( doc.body.childNodes, schema, doc );
+	cleanNodeList( doc.body.childNodes, doc, schema, inline );
 
 	return doc.body.innerHTML;
 }

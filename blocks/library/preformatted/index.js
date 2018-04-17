@@ -7,7 +7,7 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import './editor.scss';
-import { createBlock } from '../../api';
+import { createBlock, getPhrasingContentSchema } from '../../api';
 import RichText from '../../rich-text';
 
 export const name = 'core/preformatted';
@@ -40,12 +40,17 @@ export const settings = {
 			{
 				type: 'raw',
 				isMatch: ( node ) => (
-					node.nodeName === 'PRE' &&
+					node.matches( 'pre' ) &&
 					! (
 						node.children.length === 1 &&
-						node.firstChild.nodeName === 'CODE'
+						node.firstChild.matches( 'code' )
 					)
 				),
+				schema: {
+					pre: {
+						children: getPhrasingContentSchema(),
+					},
+				},
 			},
 		],
 		to: [

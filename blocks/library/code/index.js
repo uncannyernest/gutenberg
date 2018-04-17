@@ -8,7 +8,7 @@ import { __ } from '@wordpress/i18n';
  */
 import './editor.scss';
 import PlainText from '../../plain-text';
-import { createBlock } from '../../api';
+import { createBlock, getPhrasingContentSchema } from '../../api';
 
 export const name = 'core/code';
 
@@ -45,10 +45,19 @@ export const settings = {
 			{
 				type: 'raw',
 				isMatch: ( node ) => (
-					node.nodeName === 'PRE' &&
+					node.matches( 'pre' ) &&
 					node.children.length === 1 &&
-					node.firstChild.nodeName === 'CODE'
+					node.firstChild.matches( 'code' )
 				),
+				schema: {
+					pre: {
+						children: {
+							code: {
+								children: getPhrasingContentSchema(),
+							},
+						},
+					},
+				},
 			},
 		],
 	},

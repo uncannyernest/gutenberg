@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import { isInline, isEmpty } from './utils';
+import { isPhrasingContent, isEmpty } from './utils';
 
 /**
  * Browser dependencies
@@ -57,7 +57,7 @@ export default function( HTML ) {
 				} else {
 					accu.appendChild( node );
 				}
-			} else if ( isInline( node ) ) {
+			} else if ( isPhrasingContent( node ) ) {
 				if ( ! accu.lastChild || accu.lastChild.nodeName !== 'P' ) {
 					accu.appendChild( accuDoc.createElement( 'P' ) );
 				}

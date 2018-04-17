@@ -6,14 +6,18 @@ import { unwrap, replaceTag } from '@wordpress/utils';
 /**
  * Internal dependencies
  */
-import { isPhrasingContent, isBlockContent } from './utils';
+import { isPhrasingContent } from './utils';
 
 /**
  * Browser dependencies
  */
 const { ELEMENT_NODE } = window.Node;
 
-export default function( node, doc ) {
+function isBlockContent( node, schema = {} ) {
+	return schema.hasOwnProperty( node.nodeName.toLowerCase() );
+}
+
+export default function( node, doc, schema ) {
 	if ( node.nodeType !== ELEMENT_NODE ) {
 		return;
 	}
@@ -39,7 +43,7 @@ export default function( node, doc ) {
 	if (
 		isPhrasingContent( node ) &&
 		node.hasChildNodes() &&
-		Array.from( node.childNodes ).some( isBlockContent )
+		Array.from( node.childNodes ).some( ( child ) => isBlockContent( child, schema ) )
 	) {
 		unwrap( node );
 	}

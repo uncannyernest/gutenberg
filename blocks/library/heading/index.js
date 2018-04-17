@@ -9,7 +9,7 @@ import { PanelBody, Toolbar } from '@wordpress/components';
  * Internal dependencies
  */
 import './editor.scss';
-import { createBlock } from '../../api';
+import { createBlock, getPhrasingContentSchema } from '../../api';
 import RichText from '../../rich-text';
 import BlockControls from '../../block-controls';
 import InspectorControls from '../../inspector-controls';
@@ -67,7 +67,15 @@ export const settings = {
 			},
 			{
 				type: 'raw',
-				isMatch: ( node ) => /H\d/.test( node.nodeName ),
+				selector: 'h1,h2,h3,h4,h5,h6',
+				schema: {
+					h1: { children: getPhrasingContentSchema() },
+					h2: { children: getPhrasingContentSchema() },
+					h3: { children: getPhrasingContentSchema() },
+					h4: { children: getPhrasingContentSchema() },
+					h5: { children: getPhrasingContentSchema() },
+					h6: { children: getPhrasingContentSchema() },
+				},
 			},
 			{
 				type: 'pattern',

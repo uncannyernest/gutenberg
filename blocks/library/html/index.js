@@ -10,6 +10,7 @@ import { withState, SandBox, CodeEditor } from '@wordpress/components';
  */
 import './editor.scss';
 import BlockControls from '../../block-controls';
+import { getPhrasingContentSchema } from '../../api';
 
 export const name = 'core/html';
 
@@ -41,7 +42,20 @@ export const settings = {
 		from: [
 			{
 				type: 'raw',
-				isMatch: ( node ) => node.nodeName === 'FIGURE' && node.firstChild.nodeName === 'IFRAME',
+				isMatch: ( node ) => node.matches( 'figure' ) && !! node.querySelector( 'iframe' ),
+				schema: {
+					figure: {
+						require: [ 'iframe' ],
+						children: {
+							iframe: {
+								attributes: [ 'src', 'allowfullscreen', 'height', 'width' ],
+							},
+							figcaption: {
+								children: getPhrasingContentSchema(),
+							},
+						},
+					},
+				},
 			},
 		],
 	},

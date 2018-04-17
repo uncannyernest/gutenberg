@@ -13,9 +13,26 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import './editor.scss';
-import { createBlock } from '../../api';
+import { createBlock, getPhrasingContentSchema } from '../../api';
 import RichText from '../../rich-text';
 import BlockControls from '../../block-controls';
+
+const listContentSchema = {
+	...getPhrasingContentSchema(),
+	ul: {},
+	ol: { attributes: [ 'type' ] },
+};
+
+// Recursion is needed.
+// Possible: ul > li > ul.
+// Impossible: ul > ul.
+[ 'ul', 'ol' ].forEach( ( tag ) => {
+	listContentSchema[ tag ].children = {
+		li: {
+			children: listContentSchema,
+		},
+	};
+} );
 
 export const name = 'core/list';
 
@@ -78,7 +95,11 @@ export const settings = {
 			},
 			{
 				type: 'raw',
-				isMatch: ( node ) => node.nodeName === 'OL' || node.nodeName === 'UL',
+				selector: 'ol,ul',
+				schema: {
+					ol: listContentSchema.ol,
+					ul: listContentSchema.ul,
+				},
 			},
 			{
 				type: 'pattern',

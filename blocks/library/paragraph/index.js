@@ -29,7 +29,7 @@ import {
  */
 import './editor.scss';
 import './style.scss';
-import { createBlock } from '../../api';
+import { createBlock, getPhrasingContentSchema } from '../../api';
 import { blockAutocompleter } from '../../autocompleters';
 import { defaultAutocompleters } from '../../hooks/default-autocompleters';
 import AlignmentToolbar from '../../alignment-toolbar';
@@ -326,12 +326,12 @@ export const settings = {
 		from: [
 			{
 				type: 'raw',
-				priority: 20,
-				isMatch: ( node ) => (
-					node.nodeName === 'P' &&
-					// Do not allow embedded content.
-					! node.querySelector( 'audio, canvas, embed, iframe, img, math, object, svg, video' )
-				),
+				selector: 'p',
+				schema: {
+					p: {
+						children: getPhrasingContentSchema(),
+					},
+				},
 			},
 		],
 	},

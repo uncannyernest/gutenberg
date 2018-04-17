@@ -8,8 +8,15 @@ import { equal } from 'assert';
  */
 import rawHandler from '../index';
 import { getBlockContent } from '../../serializer';
+import { registerCoreBlocks } from '../../../library';
 
 describe( 'rawHandler', () => {
+	beforeAll( () => {
+		// Load all hooks that modify blocks
+		require( 'blocks/hooks' );
+		registerCoreBlocks();
+	} );
+
 	it( 'should filter inline content', () => {
 		const filtered = rawHandler( {
 			HTML: '<h2><em>test</em></h2>',
