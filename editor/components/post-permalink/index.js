@@ -4,7 +4,7 @@
 import { withDispatch, withSelect } from '@wordpress/data';
 import { Component, compose } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Dashicon, ClipboardButton, Button, Tooltip } from '@wordpress/components';
+import { Dashicon, ClipboardButton, Button, Tooltip, OpensInNewTabMessage } from '@wordpress/components';
 
 /**
  * Internal Dependencies
@@ -81,6 +81,7 @@ class PostPermalink extends Component {
 					>
 						{ decodeURI( samplePermalink ) }
 						&lrm;
+						<OpensInNewTabMessage />
 					</Button>
 				}
 
@@ -109,6 +110,7 @@ class PostPermalink extends Component {
 						target="_blank"
 					>
 						{ __( 'Change Permalinks' ) }
+						<OpensInNewTabMessage />
 					</Button>
 				}
 			</div>
@@ -131,4 +133,3 @@ export default compose( [
 		return { refreshPost };
 	} ),
 ] )( PostPermalink );
-
