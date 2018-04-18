@@ -3,7 +3,7 @@
 // value is designed to work with).
 
 $z-layers: (
-	'.editor-block-list__block-edit:before': 0,
+	'.editor-block-list__block-edit:before': -1,
 	'.editor-block-switcher__arrow': 1,
 	'.editor-block-list__block .wp-block-more:before': -1,
 	'.editor-block-list__block {core/image aligned left or right}': 20,
