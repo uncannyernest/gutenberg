@@ -147,7 +147,7 @@ export function getCurrentPostId( state ) {
  * @return {number} Number of revisions.
  */
 export function getCurrentPostRevisionsCount( state ) {
-	return get( getCurrentPost( state ), 'revisions.count', 0 );
+	return get( getCurrentPost( state ), [ 'revisions', 'count' ], 0 );
 }
 
 /**
@@ -159,7 +159,7 @@ export function getCurrentPostRevisionsCount( state ) {
  * @return {?number} ID of the last revision.
  */
 export function getCurrentPostLastRevisionId( state ) {
-	return get( getCurrentPost( state ), 'revisions.last_id', null );
+	return get( getCurrentPost( state ), [ 'revisions', 'last_id' ], null );
 }
 
 /**
@@ -634,7 +634,7 @@ export function getBlockRootUID( state, uid ) {
 export function getAdjacentBlockUid( state, startUID, modifier = 1 ) {
 	// Default to selected block.
 	if ( startUID === undefined ) {
-		startUID = get( getSelectedBlock( state ), 'uid' );
+		startUID = get( getSelectedBlock( state ), [ 'uid' ] );
 	}
 
 	// Try multi-selection starting at extent based on modifier.
