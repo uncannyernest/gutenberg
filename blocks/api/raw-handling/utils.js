@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { omit } from 'lodash';
+import { omit, mergeWith } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -59,35 +59,33 @@ export function isPhrasingContent( node ) {
 	return getPhrasingContentSchema().hasOwnProperty( tag ) || tag === 'span';
 }
 
+/**
+ * Given raw transforms from blocks, merges all schemas into one.
+ *
+ * @param {Array} transforms Block transforms, of the `raw` type.
+ *
+ * @return {Object} A complete block content schema.
+ */
 export function getBlockContentSchema( transforms ) {
-	return transforms.reduce( ( accu, { schema = {} } ) => {
-		Object.keys( schema ).forEach( ( tag ) => {
-			if ( accu[ tag ] ) {
-				if ( accu[ tag ].children || schema[ tag ].children ) {
-					accu[ tag ].children = {
-						...accu[ tag ].children,
-						...schema[ tag ].children,
-					};
-				}
+	const schemas = transforms.map( ( { schema } ) => schema );
 
-				accu[ tag ].attributes = [
-					...( accu[ tag ].attributes || [] ),
-					...( schema[ tag ].attributes || [] ),
-				];
-
-				accu[ tag ].require = [
-					...( accu[ tag ].require || [] ),
-					...( schema[ tag ].require || [] ),
-				];
-			} else {
-				accu = { ...accu, [ tag ]: schema[ tag ] };
-			}
-		} );
-
-		return accu;
-	}, {} );
+	return mergeWith( {}, ...schemas, ( objValue, srcValue, key ) => {
+		if ( key === 'children' ) {
+			return { ...objValue, ...srcValue };
+		} else if ( key === 'attributes' || key === 'require' ) {
+			return [ ...( objValue || [] ), ...( srcValue || [] ) ];
+		}
+	} );
 }
 
+/**
+ * Recursively checks if an element is empty. An element is not empty if it
+ * contains text or contains elements with attributes such as images.
+ *
+ * @param {Element} element The element to check.
+ *
+ * @return {boolean} Wether or not the element is empty.
+ */
 export function isEmpty( element ) {
 	if ( ! element.hasChildNodes() ) {
 		return true;
@@ -112,23 +110,16 @@ export function isEmpty( element ) {
 	} );
 }
 
+/**
+ * Checks wether HTML can be considered plain text. That is, it does not contain
+ * any elements that are not line breaks.
+ *
+ * @param {string} HTML The HTML to check.
+ *
+ * @return {boolean} Wether the HTML can be considered plain text.
+ */
 export function isPlain( HTML ) {
-	const doc = document.implementation.createHTMLDocument( '' );
-
-	doc.body.innerHTML = HTML;
-
-	const brs = doc.querySelectorAll( 'br' );
-
-	// Remove all BR nodes.
-	Array.from( brs ).forEach( ( node ) => {
-		node.parentNode.replaceChild( doc.createTextNode( '\n' ), node );
-	} );
-
-	// Merge all text nodes.
-	doc.body.normalize();
-
-	// If it's plain text, there should only be one node left.
-	return doc.body.childNodes.length === 1 && doc.body.firstChild.nodeType === TEXT_NODE;
+	return ! /<(?!br)/i.test( HTML );
 }
 
 /**
@@ -201,22 +192,16 @@ function cleanNodeList( nodeList, doc, schema, inline ) {
 
 				// Strip invalid attributes.
 				Array.from( node.attributes ).forEach( ( { name } ) => {
-					if ( name === 'class' || attributes.indexOf( name ) !== -1 ) {
-						return;
+					if ( name !== 'class' && attributes.indexOf( name ) === -1 ) {
+						node.removeAttribute( name );
 					}
-
-					node.removeAttribute( name );
 				} );
 
 				// Strip invalid classes.
-				const oldClasses = node.getAttribute( 'class' ) || '';
-				const newClasses = oldClasses
-					.split( ' ' )
-					.filter( ( name ) => name && classes.indexOf( name ) !== -1 )
-					.join( ' ' );
+				const newClasses = classes.filter( ( name ) => node.classList.contains( name ) );
 
 				if ( newClasses.length ) {
-					node.setAttribute( 'class', newClasses );
+					node.setAttribute( 'class', newClasses.join( ' ' ) );
 				} else {
 					node.removeAttribute( 'class' );
 				}
@@ -235,7 +220,7 @@ function cleanNodeList( nodeList, doc, schema, inline ) {
 					// Remove children if the node is not supposed to have any.
 					} else {
 						while ( node.firstChild ) {
-							node.removeNode( node.firstChild );
+							remove( node.firstChild );
 						}
 					}
 				}
