@@ -5,6 +5,11 @@ import showdown from 'showdown';
 import { find, flatMap, filter } from 'lodash';
 
 /**
+ * WordPress dependencies
+ */
+import { unwrap } from '@wordpress/utils';
+
+/**
  * Internal dependencies
  */
 import { createBlock, getBlockTransforms } from '../factory';
@@ -62,7 +67,7 @@ function convertMarkdown( text ) {
  */
 function filterInlineHTML( HTML ) {
 	HTML = deepFilterHTML( HTML, [ phrasingContentReducer ] );
-	HTML = removeInvalidHTML( HTML, getPhrasingContentSchema(), true );
+	HTML = removeInvalidHTML( HTML, getPhrasingContentSchema(), { inline: true } );
 
 	// Allows us to ask for this information when we get a report.
 	window.console.log( 'Processed inline HTML:\n\n', HTML );
@@ -79,81 +84,20 @@ function getRawTransformations() {
 }
 
 /**
- * Converts all remaining HTML pieces into blocks.
- *
- * @param {Array} pieces A mixed array of blocks (from shortcodes) and HTML.
- *
- * @return {Array} An array of blocks.
- */
-function piecesToBlocks( pieces ) {
-	const rawTransformations = getRawTransformations();
-	const phrasingContentSchema = getPhrasingContentSchema();
-	const blockContentSchema = getBlockContentSchema( rawTransformations );
-
-	return flatMap( pieces, ( piece ) => {
-		// Already a block from shortcode.
-		if ( typeof piece !== 'string' ) {
-			return piece;
-		}
-
-		piece = deepFilterHTML( piece, [
-			msListConverter,
-			listReducer,
-			imageCorrector,
-			phrasingContentReducer,
-			specialCommentConverter,
-			embeddedContentReducer,
-			blockquoteNormaliser,
-		], blockContentSchema );
-
-		piece = removeInvalidHTML( piece, {
-			...blockContentSchema,
-			// Keep top-level phrasing content, normalised by `normaliseBlocks`.
-			...phrasingContentSchema,
-		} );
-
-		piece = normaliseBlocks( piece );
-
-		// Allows us to ask for this information when we get a report.
-		window.console.log( 'Processed HTML piece:\n\n', piece );
-
-		const doc = document.implementation.createHTMLDocument( '' );
-
-		doc.body.innerHTML = piece;
-
-		return Array.from( doc.body.children ).map( ( node ) => {
-			const { transform, blockName } =
-				find( rawTransformations, ( { isMatch } ) => isMatch( node ) );
-
-			if ( transform ) {
-				return transform( node );
-			}
-
-			return createBlock(
-				blockName,
-				getBlockAttributes(
-					getBlockType( blockName ),
-					node.outerHTML
-				)
-			);
-		} );
-	} );
-}
-
-/**
  * Converts an HTML string to known blocks. Strips everything else.
  *
- * @param {string} [options.HTML]      The HTML to convert.
- * @param {string} [options.plainText] Plain text version.
- * @param {string} [options.mode]      Handle content as blocks or inline content.
- *                                      * 'AUTO': Decide based on the content passed.
- *                                      * 'INLINE': Always handle as inline content, and return string.
- *                                      * 'BLOCKS': Always handle as blocks, and return array of blocks.
- * @param {Array}  [options.tagName]   The tag into which content will be inserted.
+ * @param {string}  [options.HTML]                     The HTML to convert.
+ * @param {string}  [options.plainText]                Plain text version.
+ * @param {string}  [options.mode]                     Handle content as blocks or inline content.
+ *                                                     * 'AUTO': Decide based on the content passed.
+ *                                                     * 'INLINE': Always handle as inline content, and return string.
+ *                                                     * 'BLOCKS': Always handle as blocks, and return array of blocks.
+ * @param {Array}   [options.tagName]                  The tag into which content will be inserted.
+ * @param {boolean} [options.canUserUseUnfilteredHTML] Whether or not the user can use unfiltered HTML.
  *
  * @return {Array|string} A list of blocks or a string, depending on `handlerMode`.
  */
-export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', tagName } ) {
+export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', tagName, canUserUseUnfilteredHTML = false } ) {
 	// First of all, strip any meta tags.
 	HTML = HTML.replace( /<meta[^>]+>/, '' );
 
@@ -200,5 +144,64 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 		return filterInlineHTML( HTML );
 	}
 
-	return piecesToBlocks( pieces );
+	const rawTransformations = getRawTransformations();
+	const phrasingContentSchema = getPhrasingContentSchema();
+	const blockContentSchema = getBlockContentSchema( rawTransformations );
+
+	return flatMap( pieces, ( piece ) => {
+		// Already a block from shortcode.
+		if ( typeof piece !== 'string' ) {
+			return piece;
+		}
+
+		const filters = [
+			msListConverter,
+			listReducer,
+			imageCorrector,
+			phrasingContentReducer,
+			specialCommentConverter,
+			embeddedContentReducer,
+			blockquoteNormaliser,
+		];
+
+		if ( ! canUserUseUnfilteredHTML ) {
+			filters.unshift( ( node ) =>
+				node.nodeName === 'iframe' && unwrap( node )
+			);
+		}
+
+		const schema = {
+			...blockContentSchema,
+			// Keep top-level phrasing content, normalised by `normaliseBlocks`.
+			...phrasingContentSchema,
+		};
+
+		piece = deepFilterHTML( piece, filters, blockContentSchema );
+		piece = removeInvalidHTML( piece, schema );
+		piece = normaliseBlocks( piece );
+
+		// Allows us to ask for this information when we get a report.
+		window.console.log( 'Processed HTML piece:\n\n', piece );
+
+		const doc = document.implementation.createHTMLDocument( '' );
+
+		doc.body.innerHTML = piece;
+
+		return Array.from( doc.body.children ).map( ( node ) => {
+			const { transform, blockName } =
+				find( rawTransformations, ( { isMatch } ) => isMatch( node ) );
+
+			if ( transform ) {
+				return transform( node );
+			}
+
+			return createBlock(
+				blockName,
+				getBlockAttributes(
+					getBlockType( blockName ),
+					node.outerHTML
+				)
+			);
+		} );
+	} );
 }
