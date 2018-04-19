@@ -19,7 +19,14 @@ import 'element-closest';
  * WordPress dependencies
  */
 import { Component, Fragment, compose } from '@wordpress/element';
-import { keycodes, createBlobURL, isHorizontalEdge, getRectangleFromRange, getScrollContainer } from '@wordpress/utils';
+import {
+	keycodes,
+	createBlobURL,
+	isHorizontalEdge,
+	getRectangleFromRange,
+	getScrollContainer,
+	deprecated,
+} from '@wordpress/utils';
 import { withSafeTimeout, Slot } from '@wordpress/components';
 import { withSelect } from '@wordpress/data';
 
@@ -153,6 +160,16 @@ export class RichText extends Component {
 		this.editor = editor;
 
 		EVENTS.forEach( ( name ) => {
+			if ( ! this.props.hasOwnProperty( 'on' + name ) ) {
+				return;
+			}
+
+			deprecated( 'All event handlers for RichText', {
+				version: '2.9',
+				alternative: 'Documented props, or onSetup access to the internal editor instance event hub.',
+				plugin: 'gutenberg',
+			} );
+
 			editor.on( name, this.proxyPropHandler( name ) );
 		} );
 
