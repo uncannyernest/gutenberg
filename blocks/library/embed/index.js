@@ -32,7 +32,7 @@ const wpEmbedAPI = memoize( ( url ) => wp.apiRequest( { path: `/oembed/1.0/proxy
 
 const matchesPatterns = ( url, patterns ) => {
 	return patterns.some( ( pattern ) => {
-		return url.match( new RegExp( pattern, 'i' ) );
+		return url.match( pattern );
 	} );
 };
 
