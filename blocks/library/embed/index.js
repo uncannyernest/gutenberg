@@ -327,7 +327,7 @@ export const common = [
 			icon: 'embed-post',
 			keywords: [ __( 'tweet' ) ],
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?twitter\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?twitter\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/youtube',
@@ -336,7 +336,7 @@ export const common = [
 			icon: 'embed-video',
 			keywords: [ __( 'music' ), __( 'video' ) ],
 		} ),
-		patterns: [ '^https?:\/\/((m|www)\.)?youtube\.com\/.+', 'youtu\.be\/.+' ],
+		patterns: [ /^https?:\/\/((m|www)\.)?youtube\.com\/.+/i, /^https?:\/\/youtu\.be\/.+/i ],
 	},
 	{
 		name: 'core-embed/facebook',
@@ -344,7 +344,7 @@ export const common = [
 			title: 'Facebook',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/www\.facebook.com\/.+' ],
+		patterns: [ /^https?:\/\/www\.facebook.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/instagram',
@@ -353,7 +353,7 @@ export const common = [
 			icon: 'embed-photo',
 			keywords: [ __( 'image' ) ],
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?instagr(\.am|am\.com)/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?instagr(\.am|am\.com)\/.+/i ],
 	},
 	{
 		name: 'core-embed/wordpress',
@@ -370,7 +370,7 @@ export const common = [
 			icon: 'embed-audio',
 			keywords: [ __( 'music' ), __( 'audio' ) ],
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?soundcloud\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?soundcloud\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/spotify',
@@ -379,7 +379,7 @@ export const common = [
 			icon: 'embed-audio',
 			keywords: [ __( 'music' ), __( 'audio' ) ],
 		} ),
-		patterns: [ '^https?:\/\/(open|play)\.spotify\.com\/.+' ],
+		patterns: [ /^https?:\/\/(open|play)\.spotify\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/flickr',
@@ -388,7 +388,7 @@ export const common = [
 			icon: 'embed-photo',
 			keywords: [ __( 'image' ) ],
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?flickr\.com\/.+', 'flic\.kr/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?flickr\.com\/.+/i, /^https?:\/\/flic\.kr\/.+/i ],
 	},
 	{
 		name: 'core-embed/vimeo',
@@ -397,7 +397,7 @@ export const common = [
 			icon: 'embed-video',
 			keywords: [ __( 'video' ) ],
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?vimeo\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?vimeo\.com\/.+/i ],
 	},
 ];
 
@@ -408,7 +408,7 @@ export const others = [
 			title: 'Animoto',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?(animoto|video214)\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?(animoto|video214)\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/cloudup',
@@ -416,7 +416,7 @@ export const others = [
 			title: 'Cloudup',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/cloudup\.com\/.+' ],
+		patterns: [ /^https?:\/\/cloudup\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/collegehumor',
@@ -424,7 +424,7 @@ export const others = [
 			title: 'CollegeHumor',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?collegehumor\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?collegehumor\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/dailymotion',
@@ -432,7 +432,7 @@ export const others = [
 			title: 'Dailymotion',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?dailymotion\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?dailymotion\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/funnyordie',
@@ -440,7 +440,7 @@ export const others = [
 			title: 'Funny or Die',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '(www\.)?funnyordie\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?funnyordie\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/hulu',
@@ -448,7 +448,7 @@ export const others = [
 			title: 'Hulu',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?hulu\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?hulu\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/imgur',
@@ -456,7 +456,7 @@ export const others = [
 			title: 'Imgur',
 			icon: 'embed-photo',
 		} ),
-		patterns: [ '^https?:\/\/(.+\.)?imgur\.com\/.+' ],
+		patterns: [ /^https?:\/\/(.+\.)?imgur\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/issuu',
@@ -464,7 +464,7 @@ export const others = [
 			title: 'Issuu',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?issuu\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?issuu\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/kickstarter',
@@ -472,7 +472,7 @@ export const others = [
 			title: 'Kickstarter',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?kickstarter\.com\/.+', '^https?:\/\/kck\.st/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?kickstarter\.com\/.+/i, /^https?:\/\/kck\.st\/.+/i ],
 	},
 	{
 		name: 'core-embed/meetup-com',
@@ -480,7 +480,7 @@ export const others = [
 			title: 'Meetup.com',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?meetu(\.ps|p\.com)\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?meetu(\.ps|p\.com)\/.+/i ],
 	},
 	{
 		name: 'core-embed/mixcloud',
@@ -489,7 +489,7 @@ export const others = [
 			icon: 'embed-audio',
 			keywords: [ __( 'music' ), __( 'audio' ) ],
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?mixcloud\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?mixcloud\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/photobucket',
@@ -497,7 +497,7 @@ export const others = [
 			title: 'Photobucket',
 			icon: 'embed-photo',
 		} ),
-		patterns: [ '^http:\/\/g?i*\.photobucket\.com\/.+' ],
+		patterns: [ /^http:\/\/g?i*\.photobucket\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/polldaddy',
@@ -505,7 +505,7 @@ export const others = [
 			title: 'Polldaddy',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?mixcloud\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?mixcloud\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/reddit',
@@ -513,7 +513,7 @@ export const others = [
 			title: 'Reddit',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?reddit\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?reddit\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/reverbnation',
@@ -521,7 +521,7 @@ export const others = [
 			title: 'ReverbNation',
 			icon: 'embed-audio',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?reverbnation\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?reverbnation\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/screencast',
@@ -529,7 +529,7 @@ export const others = [
 			title: 'Screencast',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?screencast\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?screencast\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/scribd',
@@ -537,7 +537,7 @@ export const others = [
 			title: 'Scribd',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?scribd\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?scribd\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/slideshare',
@@ -545,7 +545,7 @@ export const others = [
 			title: 'Slideshare',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(.+?\.)?slideshare\.net\/.+' ],
+		patterns: [ /^https?:\/\/(.+?\.)?slideshare\.net\/.+/i ],
 	},
 	{
 		name: 'core-embed/smugmug',
@@ -553,7 +553,7 @@ export const others = [
 			title: 'SmugMug',
 			icon: 'embed-photo',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?smugmug\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?smugmug\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/speaker',
@@ -561,7 +561,7 @@ export const others = [
 			title: 'Speaker',
 			icon: 'embed-audio',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?speakerdeck\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?speakerdeck\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/ted',
@@ -569,7 +569,7 @@ export const others = [
 			title: 'TED',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '^https?:\/\/(www\.|embed\.)?ted\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.|embed\.)?ted\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/tumblr',
@@ -577,7 +577,7 @@ export const others = [
 			title: 'Tumblr',
 			icon: 'embed-post',
 		} ),
-		patterns: [ '^https?:\/\/(www\.)?tumblr\.com\/.+' ],
+		patterns: [ /^https?:\/\/(www\.)?tumblr\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/videopress',
@@ -586,7 +586,7 @@ export const others = [
 			icon: 'embed-video',
 			keywords: [ __( 'video' ) ],
 		} ),
-		patterns: [ '^https?:\/\/videopress\.com\/.+' ],
+		patterns: [ /^https?:\/\/videopress\.com\/.+/i ],
 	},
 	{
 		name: 'core-embed/wordpress-tv',
@@ -594,6 +594,6 @@ export const others = [
 			title: 'WordPress.tv',
 			icon: 'embed-video',
 		} ),
-		patterns: [ '^https?:\/\/wordpress\.tv\/.+' ],
+		patterns: [ /^https?:\/\/wordpress\.tv\/.+/i ],
 	},
 ];
