@@ -166,7 +166,10 @@ export class RichText extends Component {
 
 			deprecated( 'All event handlers for RichText', {
 				version: '2.9',
-				alternative: 'Documented props, or onSetup access to the internal editor instance event hub.',
+				alternative: (
+					'Documented props, ancestor event handler, or onSetup' +
+					'access to the internal editor instance event hub.'
+				),
 				plugin: 'gutenberg',
 			} );
 
