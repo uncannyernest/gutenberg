@@ -30,9 +30,6 @@ const HOSTS_NO_PREVIEWS = [ 'facebook.com' ];
 // Caches the embed API calls, so if blocks get transformed, or deleted and added again, we don't spam the API.
 const wpEmbedAPI = memoize( ( url ) => wp.apiRequest( { path: `/oembed/1.0/proxy?${ stringify( { url } ) }` } ) );
 
-// A map of block names to URL patterns, so we can find which block should handle a URL.
-const blockPatterns = {};
-
 const matchesPatterns = ( url, patterns ) => {
 	return patterns.some( ( pattern ) => {
 		return url.match( new RegExp( pattern, 'i' ) );
@@ -40,9 +37,9 @@ const matchesPatterns = ( url, patterns ) => {
 };
 
 const findBlock = ( url ) => {
-	for ( const blockName in blockPatterns ) {
-		if ( matchesPatterns( url, blockPatterns[ blockName ] ) ) {
-			return blockName;
+	for ( const block of [ ...common, ...others ] ) {
+		if ( matchesPatterns( url, block.patterns ) ) {
+			return block.name;
 		}
 	}
 	return 'core/embed';
@@ -322,292 +319,281 @@ export const settings = getEmbedBlockSettings( {
 	},
 } );
 
-function getEmbedBlockDefinition( options ) {
-	// Register the patterns for this block. They're separate from the settings to keep non-standard fields out of settings.
-	if ( options.patterns && options.patterns.length > 0 ) {
-		blockPatterns[ options.name ] = options.patterns;
-	}
-	return {
-		name: options.name,
-		settings: getEmbedBlockSettings( { ...options.settings, patterns: options.patterns } ),
-	};
-}
-
 export const common = [
-	getEmbedBlockDefinition( {
+	{
 		name: 'core-embed/twitter',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Twitter',
 			icon: 'embed-post',
 			keywords: [ __( 'tweet' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?twitter\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/youtube',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'YouTube',
 			icon: 'embed-video',
 			keywords: [ __( 'music' ), __( 'video' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/((m|www)\.)?youtube\.com\/.+', 'youtu\.be\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/facebook',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Facebook',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/www\.facebook.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/instagram',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Instagram',
 			icon: 'embed-photo',
 			keywords: [ __( 'image' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?instagr(\.am|am\.com)/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/wordpress',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'WordPress',
 			icon: 'embed-post',
 			keywords: [ __( 'post' ), __( 'blog' ) ],
-		},
-	} ),
-	getEmbedBlockDefinition( {
+		} ),
+	},
+	{
 		name: 'core-embed/soundcloud',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'SoundCloud',
 			icon: 'embed-audio',
 			keywords: [ __( 'music' ), __( 'audio' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?soundcloud\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/spotify',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Spotify',
 			icon: 'embed-audio',
 			keywords: [ __( 'music' ), __( 'audio' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/(open|play)\.spotify\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/flickr',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Flickr',
 			icon: 'embed-photo',
 			keywords: [ __( 'image' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?flickr\.com\/.+', 'flic\.kr/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/vimeo',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Vimeo',
 			icon: 'embed-video',
 			keywords: [ __( 'video' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?vimeo\.com\/.+' ],
-	} ),
+	},
 ];
 
 export const others = [
-	getEmbedBlockDefinition( {
+	{
 		name: 'core-embed/animoto',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Animoto',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?(animoto|video214)\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/cloudup',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Cloudup',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/cloudup\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/collegehumor',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'CollegeHumor',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?collegehumor\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/dailymotion',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Dailymotion',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?dailymotion\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/funnyordie',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Funny or Die',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '(www\.)?funnyordie\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/hulu',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Hulu',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?hulu\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/imgur',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Imgur',
 			icon: 'embed-photo',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(.+\.)?imgur\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/issuu',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Issuu',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?issuu\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/kickstarter',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Kickstarter',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?kickstarter\.com\/.+', '^https?:\/\/kck\.st/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/meetup-com',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Meetup.com',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?meetu(\.ps|p\.com)\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/mixcloud',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Mixcloud',
 			icon: 'embed-audio',
 			keywords: [ __( 'music' ), __( 'audio' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?mixcloud\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/photobucket',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Photobucket',
 			icon: 'embed-photo',
-		},
+		} ),
 		patterns: [ '^http:\/\/g?i*\.photobucket\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/polldaddy',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Polldaddy',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?mixcloud\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/reddit',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Reddit',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?reddit\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/reverbnation',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'ReverbNation',
 			icon: 'embed-audio',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?reverbnation\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/screencast',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Screencast',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?screencast\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/scribd',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Scribd',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?scribd\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/slideshare',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Slideshare',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(.+?\.)?slideshare\.net\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/smugmug',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'SmugMug',
 			icon: 'embed-photo',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?smugmug\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/speaker',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Speaker',
 			icon: 'embed-audio',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?speakerdeck\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/ted',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'TED',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.|embed\.)?ted\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/tumblr',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'Tumblr',
 			icon: 'embed-post',
-		},
+		} ),
 		patterns: [ '^https?:\/\/(www\.)?tumblr\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/videopress',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'VideoPress',
 			icon: 'embed-video',
 			keywords: [ __( 'video' ) ],
-		},
+		} ),
 		patterns: [ '^https?:\/\/videopress\.com\/.+' ],
-	} ),
-	getEmbedBlockDefinition( {
+	},
+	{
 		name: 'core-embed/wordpress-tv',
-		settings: {
+		settings: getEmbedBlockSettings( {
 			title: 'WordPress.tv',
 			icon: 'embed-video',
-		},
+		} ),
 		patterns: [ '^https?:\/\/wordpress\.tv\/.+' ],
-	} ),
+	},
 ];
