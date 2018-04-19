@@ -5,7 +5,6 @@ import classnames from 'classnames';
 import {
 	last,
 	isEqual,
-	omitBy,
 	forEach,
 	merge,
 	identity,
@@ -14,44 +13,32 @@ import {
 	noop,
 	reject,
 } from 'lodash';
-import { nodeListToReact } from 'dom-react';
 import 'element-closest';
 
 /**
  * WordPress dependencies
  */
-import { createElement, Component, renderToString } from '@wordpress/element';
-import { keycodes, createBlobURL, isHorizontalEdge } from '@wordpress/utils';
-import { withSafeTimeout, Slot, Fill } from '@wordpress/components';
+import { Component, Fragment, compose } from '@wordpress/element';
+import { keycodes, createBlobURL, isHorizontalEdge, getRectangleFromRange, getScrollContainer } from '@wordpress/utils';
+import { withSafeTimeout, Slot } from '@wordpress/components';
+import { withSelect } from '@wordpress/data';
 
 /**
  * Internal dependencies
  */
 import './style.scss';
 import { rawHandler } from '../api';
+import Autocomplete from '../autocomplete';
+import BlockFormatControls from '../block-format-controls';
 import FormatToolbar from './format-toolbar';
 import TinyMCE from './tinymce';
 import { pickAriaProps } from './aria';
 import patterns from './patterns';
 import { EVENTS } from './constants';
+import { withBlockEditContext } from '../block-edit/context';
+import { domToFormat, valueToString, isEmpty } from './format';
 
 const { BACKSPACE, DELETE, ENTER } = keycodes;
-
-export function createTinyMCEElement( type, props, ...children ) {
-	if ( props[ 'data-mce-bogus' ] === 'all' ) {
-		return null;
-	}
-
-	if ( props.hasOwnProperty( 'data-mce-bogus' ) ) {
-		return children;
-	}
-
-	return createElement(
-		type,
-		omitBy( props, ( value, key ) => key.indexOf( 'data-mce-' ) === 0 ),
-		...children
-	);
-}
 
 /**
  * Returns true if the node is the inline node boundary. This is used in node
@@ -100,8 +87,8 @@ export function filterEmptyNodes( childNodes ) {
 export function getFormatProperties( formatName, parents ) {
 	switch ( formatName ) {
 		case 'link' : {
-			const anchor = find( parents, node => node.nodeName.toLowerCase() === 'a' );
-			return !! anchor ? { value: anchor.getAttribute( 'href' ) || '', node: anchor } : {};
+			const anchor = find( parents, ( node ) => node.nodeName.toLowerCase() === 'a' );
+			return !! anchor ? { value: anchor.getAttribute( 'href' ) || '', target: anchor.getAttribute( 'target' ) || '', node: anchor } : {};
 		}
 		default:
 			return {};
@@ -111,20 +98,8 @@ export function getFormatProperties( formatName, parents ) {
 const DEFAULT_FORMATS = [ 'bold', 'italic', 'strikethrough', 'link' ];
 
 export class RichText extends Component {
-	constructor( props ) {
+	constructor( { value } ) {
 		super( ...arguments );
-
-		const { value } = props;
-		if ( 'production' !== process.env.NODE_ENV && undefined !== value &&
-					! Array.isArray( value ) ) {
-			// eslint-disable-next-line no-console
-			console.error(
-				`Invalid value of type ${ typeof value } passed to RichText ` +
-				'(expected array). Attribute values should be sourced using ' +
-				'the `children` source when used with RichText.\n\n' +
-				'See: https://wordpress.org/gutenberg/handbook/block-api/attributes/#children'
-			);
-		}
 
 		this.onInit = this.onInit.bind( this );
 		this.getSettings = this.getSettings.bind( this );
@@ -289,7 +264,7 @@ export class RichText extends Component {
 		if ( item && ! HTML ) {
 			const blob = item.getAsFile ? item.getAsFile() : item;
 			const rootNode = this.editor.getBody();
-			const isEmpty = this.editor.dom.isEmpty( rootNode );
+			const isEmptyEditor = this.editor.dom.isEmpty( rootNode );
 			const content = rawHandler( {
 				HTML: `<img src="${ createBlobURL( blob ) }">`,
 				mode: 'BLOCKS',
@@ -299,7 +274,7 @@ export class RichText extends Component {
 			// Allows us to ask for this information when we get a report.
 			window.console.log( 'Received item:\n\n', blob );
 
-			if ( isEmpty && this.props.onReplace ) {
+			if ( isEmptyEditor && this.props.onReplace ) {
 				// Necessary to allow the paste bin to be removed without errors.
 				this.props.setTimeout( () => this.props.onReplace( content ) );
 			} else if ( this.props.onSplit ) {
@@ -353,11 +328,11 @@ export class RichText extends Component {
 		}
 
 		const rootNode = this.editor.getBody();
-		const isEmpty = this.editor.dom.isEmpty( rootNode );
+		const isEmptyEditor = this.editor.dom.isEmpty( rootNode );
 
 		let mode = 'INLINE';
 
-		if ( isEmpty && this.props.onReplace ) {
+		if ( isEmptyEditor && this.props.onReplace ) {
 			mode = 'BLOCKS';
 		} else if ( this.props.onSplit ) {
 			mode = 'AUTO';
@@ -395,8 +370,8 @@ export class RichText extends Component {
 	 */
 
 	onChange() {
-		this.isEmpty = this.editor.dom.isEmpty( this.editor.getBody() );
-		this.savedContent = this.isEmpty ? [] : this.getContent();
+		this.savedContent = this.getContent();
+		this.isEmpty = isEmpty( this.savedContent, this.props.format );
 		this.props.onChange( this.savedContent );
 	}
 
@@ -407,36 +382,6 @@ export class RichText extends Component {
 	}
 
 	/**
-	 * Determines the DOM rectangle for the selection in the editor.
-	 *
-	 * @return {DOMRect} The DOMRect based on the selection in the editor.
-	 */
-	getEditorSelectionRect() {
-		let range = this.editor.selection.getRng();
-
-		// getBoundingClientRect doesn't work in Safari when range is collapsed
-		if ( range.collapsed ) {
-			const { startContainer, startOffset } = range;
-			range = document.createRange();
-
-			if ( ( ! startContainer.nodeValue ) || startContainer.nodeValue.length === 0 ) {
-				// container has no text content, select node (empty block)
-				range.selectNode( startContainer );
-			} else if ( startOffset === startContainer.nodeValue.length ) {
-				// at end of text content, select last character
-				range.setStart( startContainer, startContainer.nodeValue.length - 1 );
-				range.setEnd( startContainer, startContainer.nodeValue.length );
-			} else {
-				// select 1 character from current position
-				range.setStart( startContainer, startOffset );
-				range.setEnd( startContainer, startOffset + 1 );
-			}
-		}
-
-		return range.getBoundingClientRect();
-	}
-
-	/**
 	 * Calculates the relative position where the link toolbar should be.
 	 *
 	 * Based on the selection of the text inside this element a position is
@@ -444,11 +389,11 @@ export class RichText extends Component {
 	 * absolutely position the toolbar. It does this by finding the closest
 	 * relative element.
 	 *
+	 * @param {DOMRect} position Caret range rectangle.
+	 *
 	 * @return {{top: number, left: number}} The desired position of the toolbar.
 	 */
-	getFocusPosition() {
-		const position = this.getEditorSelectionRect();
-
+	getFocusPosition( position ) {
 		// Find the parent "relative" or "absolute" positioned container
 		const findRelativeParent = ( node ) => {
 			const style = window.getComputedStyle( node );
@@ -460,11 +405,10 @@ export class RichText extends Component {
 		const container = findRelativeParent( this.editor.getBody() );
 		const containerPosition = container.getBoundingClientRect();
 		const toolbarOffset = { top: 10, left: 0 };
-		const linkModalWidth = 298;
 
 		return {
 			top: position.top - containerPosition.top + ( position.height ) + toolbarOffset.top,
-			left: position.left - containerPosition.left - ( linkModalWidth / 2 ) + ( position.width / 2 ) + toolbarOffset.left,
+			left: position.left - containerPosition.left + ( position.width / 2 ) + toolbarOffset.left,
 		};
 	}
 
@@ -530,10 +474,12 @@ export class RichText extends Component {
 				const index = dom.nodeIndex( selectedNode );
 				const beforeNodes = childNodes.slice( 0, index );
 				const afterNodes = childNodes.slice( index + 1 );
-				const beforeElement = nodeListToReact( beforeNodes, createTinyMCEElement );
-				const afterElement = nodeListToReact( afterNodes, createTinyMCEElement );
 
-				this.restoreContentAndSplit( beforeElement, afterElement );
+				const { format } = this.props;
+				const before = domToFormat( beforeNodes, format, this.editor );
+				const after = domToFormat( afterNodes, format, this.editor );
+
+				this.restoreContentAndSplit( before, after );
 			} else {
 				event.preventDefault();
 				this.onCreateUndoLevel();
@@ -557,6 +503,40 @@ export class RichText extends Component {
 		// BACKSPACE is pressed.
 		if ( keyCode === BACKSPACE ) {
 			this.onChange();
+		}
+
+		// `scrollToRect` is called on `nodechange`, whereas calling it on
+		// `keyup` *when* moving to a new RichText element results in incorrect
+		// scrolling. Though the following allows false positives, it results
+		// in much smoother scrolling.
+		if ( this.props.isViewportSmall && keyCode !== BACKSPACE && keyCode !== ENTER ) {
+			this.scrollToRect( getRectangleFromRange( this.editor.selection.getRng() ) );
+		}
+	}
+
+	scrollToRect( rect ) {
+		const { top: caretTop } = rect;
+		const container = getScrollContainer( this.editor.getBody() );
+
+		if ( ! container ) {
+			return;
+		}
+
+		// When scrolling, avoid positioning the caret at the very top of
+		// the viewport, providing some "air" and some textual context for
+		// the user, and avoiding toolbars.
+		const graceOffset = 100;
+
+		// Avoid pointless scrolling by establishing a threshold under
+		// which scrolling should be skipped;
+		const epsilon = 10;
+		const delta = caretTop - graceOffset;
+
+		if ( Math.abs( delta ) > epsilon ) {
+			container.scrollTo(
+				container.scrollLeft,
+				container.scrollTop + delta,
+			);
 		}
 	}
 
@@ -590,10 +570,11 @@ export class RichText extends Component {
 			const beforeFragment = beforeRange.extractContents();
 			const afterFragment = afterRange.extractContents();
 
-			const beforeElement = nodeListToReact( beforeFragment.childNodes, createTinyMCEElement );
-			const afterElement = nodeListToReact( filterEmptyNodes( afterFragment.childNodes ), createTinyMCEElement );
+			const { format } = this.props;
+			const before = domToFormat( beforeFragment.childNodes, format, this.editor );
+			const after = domToFormat( filterEmptyNodes( afterFragment.childNodes ), format, this.editor );
 
-			this.restoreContentAndSplit( beforeElement, afterElement, blocks );
+			this.restoreContentAndSplit( before, after, blocks );
 		} else {
 			this.restoreContentAndSplit( [], [], blocks );
 		}
@@ -641,9 +622,10 @@ export class RichText extends Component {
 		// Splitting into two blocks
 		this.setContent( this.props.value );
 
+		const { format } = this.props;
 		this.restoreContentAndSplit(
-			nodeListToReact( before, createTinyMCEElement ),
-			nodeListToReact( after, createTinyMCEElement )
+			domToFormat( before, format, this.editor ),
+			domToFormat( after, format, this.editor )
 		);
 	}
 
@@ -651,6 +633,7 @@ export class RichText extends Component {
 		if ( document.activeElement !== this.editor.getBody() ) {
 			return;
 		}
+
 		const formatNames = this.props.formattingControls;
 		const formats = this.editor.formatter.matchAll( formatNames ).reduce( ( accFormats, activeFormat ) => {
 			accFormats[ activeFormat ] = {
@@ -661,8 +644,25 @@ export class RichText extends Component {
 			return accFormats;
 		}, {} );
 
-		const focusPosition = this.getFocusPosition();
+		let rect;
+		const selectedAnchor = find( parents, ( node ) => node.tagName === 'A' );
+		if ( selectedAnchor ) {
+			// If we selected a link, position the Link UI below the link
+			rect = selectedAnchor.getBoundingClientRect();
+		} else {
+			// Otherwise, position the Link UI below the cursor or text selection
+			rect = getRectangleFromRange( this.editor.selection.getRng() );
+		}
+		const focusPosition = this.getFocusPosition( rect );
+
 		this.setState( { formats, focusPosition, selectedNodeId: this.state.selectedNodeId + 1 } );
+
+		if ( this.props.isViewportSmall ) {
+			// Originally called on `focusin`, that hook turned out to be
+			// premature. On `nodechange` we can work with the finalized TinyMCE
+			// instance and scroll to proper position.
+			this.scrollToRect( rect );
+		}
 	}
 
 	updateContent() {
@@ -677,16 +677,22 @@ export class RichText extends Component {
 		} );
 	}
 
-	setContent( content = '' ) {
-		this.editor.setContent( renderToString( content ) );
+	setContent( content ) {
+		const { format } = this.props;
+		this.editor.setContent( valueToString( content, format ) );
 	}
 
 	getContent() {
-		return nodeListToReact( this.editor.getBody().childNodes || [], createTinyMCEElement );
-	}
+		const { format } = this.props;
 
-	componentWillUnmount() {
-		this.onChange();
+		switch ( format ) {
+			case 'string':
+				return this.editor.getContent();
+			default:
+				return this.editor.dom.isEmpty( this.editor.getBody() ) ?
+					[] :
+					domToFormat( this.editor.getBody().childNodes || [], 'element', this.editor );
+		}
 	}
 
 	componentDidUpdate( prevProps ) {
@@ -738,7 +744,7 @@ export class RichText extends Component {
 					if ( ! anchor ) {
 						this.removeFormat( 'link' );
 					}
-					this.applyFormat( 'link', { href: formatValue.value }, anchor );
+					this.applyFormat( 'link', { href: formatValue.value, target: formatValue.target }, anchor );
 				} else {
 					this.editor.execCommand( 'Unlink' );
 				}
@@ -782,8 +788,10 @@ export class RichText extends Component {
 			placeholder,
 			multiline: MultilineTag,
 			keepPlaceholderOnFocus = false,
-			isSelected = false,
+			isSelected,
 			formatters,
+			autocompleters,
+			format,
 		} = this.props;
 
 		const ariaProps = { ...pickAriaProps( this.props ), 'aria-multiline': !! MultilineTag };
@@ -808,37 +816,48 @@ export class RichText extends Component {
 
 		return (
 			<div className={ classes }>
-				{ isSelected &&
-					<Fill name="Formatting.Toolbar">
-						{ ! inlineToolbar && formatToolbar }
-					</Fill>
-				}
-				{ isSelected && inlineToolbar &&
+				{ isSelected && ! inlineToolbar && (
+					<BlockFormatControls>
+						{ formatToolbar }
+					</BlockFormatControls>
+				) }
+				{ isSelected && inlineToolbar && (
 					<div className="block-rich-text__inline-toolbar">
 						{ formatToolbar }
 					</div>
-				}
-				<TinyMCE
-					tagName={ Tagname }
-					getSettings={ this.getSettings }
-					onSetup={ this.onSetup }
-					style={ style }
-					defaultValue={ value }
-					isPlaceholderVisible={ isPlaceholderVisible }
-					aria-label={ placeholder }
-					{ ...ariaProps }
-					className={ className }
-					key={ key }
-				/>
-				{ isPlaceholderVisible &&
-					<Tagname
-						className={ classnames( 'blocks-rich-text__tinymce', className ) }
-						style={ style }
-					>
-						{ MultilineTag ? <MultilineTag>{ placeholder }</MultilineTag> : placeholder }
-					</Tagname>
-				}
-				{ isSelected && <Slot name="RichText.Siblings" /> }
+				) }
+				<Autocomplete onReplace={ this.props.onReplace } completers={ autocompleters }>
+					{ ( { isExpanded, listBoxId, activeId } ) => (
+						<Fragment>
+							<TinyMCE
+								tagName={ Tagname }
+								getSettings={ this.getSettings }
+								onSetup={ this.onSetup }
+								style={ style }
+								defaultValue={ value }
+								format={ format }
+								isPlaceholderVisible={ isPlaceholderVisible }
+								aria-label={ placeholder }
+								aria-autocomplete="list"
+								aria-expanded={ isExpanded }
+								aria-owns={ listBoxId }
+								aria-activedescendant={ activeId }
+								{ ...ariaProps }
+								className={ className }
+								key={ key }
+							/>
+							{ isPlaceholderVisible &&
+								<Tagname
+									className={ classnames( 'blocks-rich-text__tinymce', className ) }
+									style={ style }
+								>
+									{ MultilineTag ? <MultilineTag>{ placeholder }</MultilineTag> : placeholder }
+								</Tagname>
+							}
+							{ isSelected && <Slot name="RichText.Siblings" /> }
+						</Fragment>
+					) }
+				</Autocomplete>
 			</div>
 		);
 	}
@@ -854,6 +873,18 @@ RichText.contextTypes = {
 RichText.defaultProps = {
 	formattingControls: DEFAULT_FORMATS,
 	formatters: [],
+	format: 'element',
 };
 
-export default withSafeTimeout( RichText );
+export default compose( [
+	withBlockEditContext,
+	withSelect( ( select, { isSelected, blockEditContext } ) => {
+		const { isViewportMatch = identity } = select( 'core/viewport' ) || {};
+
+		return {
+			isViewportSmall: isViewportMatch( '< small' ),
+			isSelected: isSelected !== false && blockEditContext.isSelected,
+		};
+	} ),
+	withSafeTimeout,
+] )( RichText );

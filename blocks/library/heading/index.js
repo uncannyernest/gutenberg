@@ -2,8 +2,8 @@
  * WordPress dependencies
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { concatChildren } from '@wordpress/element';
-import { Toolbar } from '@wordpress/components';
+import { concatChildren, Fragment } from '@wordpress/element';
+import { PanelBody, Toolbar } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -101,13 +101,12 @@ export const settings = {
 		};
 	},
 
-	edit( { attributes, setAttributes, isSelected, mergeBlocks, insertBlocksAfter, onReplace, className } ) {
+	edit( { attributes, setAttributes, mergeBlocks, insertBlocksAfter, onReplace, className } ) {
 		const { align, content, nodeName, placeholder } = attributes;
 
-		return [
-			isSelected && (
+		return (
+			<Fragment>
 				<BlockControls
-					key="controls"
 					controls={
 						'234'.split( '' ).map( ( level ) => ( {
 							icon: 'heading',
@@ -118,56 +117,53 @@ export const settings = {
 						} ) )
 					}
 				/>
-			),
-			isSelected && (
-				<InspectorControls key="inspector">
-					<h3>{ __( 'Heading Settings' ) }</h3>
-					<p>{ __( 'Level' ) }</p>
-					<Toolbar
-						controls={
-							'123456'.split( '' ).map( ( level ) => ( {
-								icon: 'heading',
-								title: sprintf( __( 'Heading %s' ), level ),
-								isActive: 'H' + level === nodeName,
-								onClick: () => setAttributes( { nodeName: 'H' + level } ),
-								subscript: level,
-							} ) )
-						}
-					/>
-					<p>{ __( 'Text Alignment' ) }</p>
-					<AlignmentToolbar
-						value={ align }
-						onChange={ ( nextAlign ) => {
-							setAttributes( { align: nextAlign } );
-						} }
-					/>
+				<InspectorControls>
+					<PanelBody title={ __( 'Heading Settings' ) }>
+						<p>{ __( 'Level' ) }</p>
+						<Toolbar
+							controls={
+								'123456'.split( '' ).map( ( level ) => ( {
+									icon: 'heading',
+									title: sprintf( __( 'Heading %s' ), level ),
+									isActive: 'H' + level === nodeName,
+									onClick: () => setAttributes( { nodeName: 'H' + level } ),
+									subscript: level,
+								} ) )
+							}
+						/>
+						<p>{ __( 'Text Alignment' ) }</p>
+						<AlignmentToolbar
+							value={ align }
+							onChange={ ( nextAlign ) => {
+								setAttributes( { align: nextAlign } );
+							} }
+						/>
+					</PanelBody>
 				</InspectorControls>
-			),
-			<RichText
-				key="editable"
-				wrapperClassName="wp-block-heading"
-				tagName={ nodeName.toLowerCase() }
-				value={ content }
-				onChange={ ( value ) => setAttributes( { content: value } ) }
-				onMerge={ mergeBlocks }
-				onSplit={
-					insertBlocksAfter ?
-						( before, after, ...blocks ) => {
-							setAttributes( { content: before } );
-							insertBlocksAfter( [
-								...blocks,
-								createBlock( 'core/paragraph', { content: after } ),
-							] );
-						} :
-						undefined
-				}
-				onRemove={ () => onReplace( [] ) }
-				style={ { textAlign: align } }
-				className={ className }
-				placeholder={ placeholder || __( 'Write heading…' ) }
-				isSelected={ isSelected }
-			/>,
-		];
+				<RichText
+					wrapperClassName="wp-block-heading"
+					tagName={ nodeName.toLowerCase() }
+					value={ content }
+					onChange={ ( value ) => setAttributes( { content: value } ) }
+					onMerge={ mergeBlocks }
+					onSplit={
+						insertBlocksAfter ?
+							( before, after, ...blocks ) => {
+								setAttributes( { content: before } );
+								insertBlocksAfter( [
+									...blocks,
+									createBlock( 'core/paragraph', { content: after } ),
+								] );
+							} :
+							undefined
+					}
+					onRemove={ () => onReplace( [] ) }
+					style={ { textAlign: align } }
+					className={ className }
+					placeholder={ placeholder || __( 'Write heading…' ) }
+				/>
+			</Fragment>
+		);
 	},
 
 	save( { attributes } ) {

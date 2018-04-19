@@ -1,8 +1,8 @@
 /**
  * WordPress dependencies
  */
-import { Component } from '@wordpress/element';
-import { Placeholder, Spinner, ToggleControl } from '@wordpress/components';
+import { Component, Fragment } from '@wordpress/element';
+import { PanelBody, Placeholder, Spinner, ToggleControl } from '@wordpress/components';
 import { withSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { times, unescape } from 'lodash';
@@ -56,7 +56,7 @@ class CategoriesBlock extends Component {
 			return categories;
 		}
 
-		return categories.filter( category => category.parent === parentId );
+		return categories.filter( ( category ) => category.parent === parentId );
 	}
 
 	getCategoryListClassName( level ) {
@@ -79,7 +79,7 @@ class CategoriesBlock extends Component {
 
 		return (
 			<ul className={ this.getCategoryListClassName( 0 ) }>
-				{ categories.map( category => this.renderCategoryListItem( category, 0 ) ) }
+				{ categories.map( ( category ) => this.renderCategoryListItem( category, 0 ) ) }
 			</ul>
 		);
 	}
@@ -101,7 +101,7 @@ class CategoriesBlock extends Component {
 					showHierarchy &&
 					!! childCategories.length && (
 						<ul className={ this.getCategoryListClassName( level + 1 ) }>
-							{ childCategories.map( childCategory => this.renderCategoryListItem( childCategory, level + 1 ) ) }
+							{ childCategories.map( ( childCategory ) => this.renderCategoryListItem( childCategory, level + 1 ) ) }
 						</ul>
 					)
 				}
@@ -116,7 +116,7 @@ class CategoriesBlock extends Component {
 
 		return (
 			<select className={ `${ this.props.className }__dropdown` }>
-				{ categories.map( category => this.renderCategoryDropdownItem( category, 0 ) ) }
+				{ categories.map( ( category ) => this.renderCategoryDropdownItem( category, 0 ) ) }
 			</select>
 		);
 	}
@@ -137,53 +137,55 @@ class CategoriesBlock extends Component {
 			</option>,
 			showHierarchy &&
 			!! childCategories.length && (
-				childCategories.map( childCategory => this.renderCategoryDropdownItem( childCategory, level + 1 ) )
+				childCategories.map( ( childCategory ) => this.renderCategoryDropdownItem( childCategory, level + 1 ) )
 			),
 		];
 	}
 
 	render() {
-		const { attributes, focus, setAttributes, isRequesting } = this.props;
+		const { attributes, setAttributes, isRequesting } = this.props;
 		const { align, displayAsDropdown, showHierarchy, showPostCounts } = attributes;
 
-		const inspectorControls = focus && (
-			<InspectorControls key="inspector">
-				<h3>{ __( 'Categories Settings' ) }</h3>
-				<ToggleControl
-					label={ __( 'Display as dropdown' ) }
-					checked={ displayAsDropdown }
-					onChange={ this.toggleDisplayAsDropdown }
-				/>
-				<ToggleControl
-					label={ __( 'Show post counts' ) }
-					checked={ showPostCounts }
-					onChange={ this.toggleShowPostCounts }
-				/>
-				<ToggleControl
-					label={ __( 'Show hierarchy' ) }
-					checked={ showHierarchy }
-					onChange={ this.toggleShowHierarchy }
-				/>
+		const inspectorControls = (
+			<InspectorControls>
+				<PanelBody title={ __( 'Categories Settings' ) }>
+					<ToggleControl
+						label={ __( 'Display as dropdown' ) }
+						checked={ displayAsDropdown }
+						onChange={ this.toggleDisplayAsDropdown }
+					/>
+					<ToggleControl
+						label={ __( 'Show post counts' ) }
+						checked={ showPostCounts }
+						onChange={ this.toggleShowPostCounts }
+					/>
+					<ToggleControl
+						label={ __( 'Show hierarchy' ) }
+						checked={ showHierarchy }
+						onChange={ this.toggleShowHierarchy }
+					/>
+				</PanelBody>
 			</InspectorControls>
 		);
 
 		if ( isRequesting ) {
-			return [
-				inspectorControls,
-				<Placeholder
-					key="placeholder"
-					icon="admin-post"
-					label={ __( 'Categories' ) }
-				>
-					<Spinner />
-				</Placeholder>,
-			];
+			return (
+				<Fragment>
+					{ inspectorControls }
+					<Placeholder
+						icon="admin-post"
+						label={ __( 'Categories' ) }
+					>
+						<Spinner />
+					</Placeholder>
+				</Fragment>
+			);
 		}
 
-		return [
-			inspectorControls,
-			focus && (
-				<BlockControls key="controls">
+		return (
+			<Fragment>
+				{ inspectorControls }
+				<BlockControls>
 					<BlockAlignmentToolbar
 						value={ align }
 						onChange={ ( nextAlign ) => {
@@ -192,15 +194,15 @@ class CategoriesBlock extends Component {
 						controls={ [ 'left', 'center', 'right', 'full' ] }
 					/>
 				</BlockControls>
-			),
-			<div key="categories" className={ this.props.className }>
-				{
-					displayAsDropdown ?
-						this.renderCategoryDropdown() :
-						this.renderCategoryList()
-				}
-			</div>,
-		];
+				<div className={ this.props.className }>
+					{
+						displayAsDropdown ?
+							this.renderCategoryDropdown() :
+							this.renderCategoryList()
+					}
+				</div>
+			</Fragment>
+		);
 	}
 }
 

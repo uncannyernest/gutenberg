@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { Button } from '@wordpress/components';
-import { Component, Fragment } from '@wordpress/element';
+import { Component, Fragment, createRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { keycodes } from '@wordpress/utils';
 
@@ -16,24 +16,26 @@ import './style.scss';
  */
 const { ESCAPE } = keycodes;
 
-class ReusableBlockEditPanel extends Component {
+class SharedBlockEditPanel extends Component {
 	constructor() {
 		super( ...arguments );
 
-		this.bindTitleRef = this.bindTitleRef.bind( this );
+		this.titleField = createRef();
+		this.editButton = createRef();
 		this.handleFormSubmit = this.handleFormSubmit.bind( this );
 		this.handleTitleChange = this.handleTitleChange.bind( this );
 		this.handleTitleKeyDown = this.handleTitleKeyDown.bind( this );
 	}
 
-	componentDidMount() {
-		if ( this.props.isEditing ) {
-			this.titleRef.select();
+	componentDidUpdate( prevProps ) {
+		// Select the input text only once when the form opens.
+		if ( ! prevProps.isEditing && this.props.isEditing ) {
+			this.titleField.current.select();
 		}
-	}
-
-	bindTitleRef( ref ) {
-		this.titleRef = ref;
+		// Move focus back to the Edit button after pressing the Escape key, Cancel, or Save.
+		if ( ( prevProps.isEditing || prevProps.isSaving ) && ! this.props.isEditing && ! this.props.isSaving ) {
+			this.editButton.current.focus();
+		}
 	}
 
 	handleFormSubmit( event ) {
@@ -53,27 +55,32 @@ class ReusableBlockEditPanel extends Component {
 	}
 
 	render() {
-		const { isEditing, title, isSaving, onEdit, onSave, onCancel } = this.props;
+		const { isEditing, title, isSaving, onEdit, onCancel } = this.props;
 
 		return (
 			<Fragment>
 				{ ( ! isEditing && ! isSaving ) && (
-					<div className="reusable-block-edit-panel">
-						<b className="reusable-block-edit-panel__info">
+					<div className="shared-block-edit-panel">
+						<b className="shared-block-edit-panel__info">
 							{ title }
 						</b>
-						<Button isLarge className="reusable-block-edit-panel__button" onClick={ onEdit }>
+						<Button
+							ref={ this.editButton }
+							isLarge
+							className="shared-block-edit-panel__button"
+							onClick={ onEdit }
+						>
 							{ __( 'Edit' ) }
 						</Button>
 					</div>
 				) }
 				{ ( isEditing || isSaving ) && (
-					<form className="reusable-block-edit-panel" onSubmit={ this.handleFormSubmit }>
+					<form className="shared-block-edit-panel" onSubmit={ this.handleFormSubmit }>
 						<input
-							ref={ this.bindTitleRef }
+							ref={ this.titleField }
 							type="text"
 							disabled={ isSaving }
-							className="reusable-block-edit-panel__title"
+							className="shared-block-edit-panel__title"
 							value={ title }
 							onChange={ this.handleTitleChange }
 							onKeyDown={ this.handleTitleKeyDown }
@@ -84,15 +91,14 @@ class ReusableBlockEditPanel extends Component {
 							isLarge
 							isBusy={ isSaving }
 							disabled={ ! title || isSaving }
-							className="reusable-block-edit-panel__button"
-							onClick={ onSave }
+							className="shared-block-edit-panel__button"
 						>
 							{ __( 'Save' ) }
 						</Button>
 						<Button
 							isLarge
 							disabled={ isSaving }
-							className="reusable-block-edit-panel__button"
+							className="shared-block-edit-panel__button"
 							onClick={ onCancel }
 						>
 							{ __( 'Cancel' ) }
@@ -104,4 +110,4 @@ class ReusableBlockEditPanel extends Component {
 	}
 }
 
-export default ReusableBlockEditPanel;
+export default SharedBlockEditPanel;

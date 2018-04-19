@@ -9,7 +9,7 @@ import memoize from 'memize';
 /**
  * WordPress dependencies
  */
-import { Component, getWrapperDisplayName } from '@wordpress/element';
+import { Component, createHigherOrderComponent } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -136,15 +136,16 @@ export function registerResolvers( reducerKey, newResolvers ) {
 			return selector;
 		}
 
-		// Ensure single invocation per argument set via memoization.
-		const fulfill = memoize( async ( ...args ) => {
-			const store = stores[ reducerKey ];
+		const store = stores[ reducerKey ];
+		const resolver = newResolvers[ key ];
 
+		const rawFulfill = async ( ...args ) => {
 			// At this point, selectors have already been pre-bound to inject
 			// state, it would not be otherwise provided to fulfill.
 			const state = store.getState();
 
-			let fulfillment = newResolvers[ key ]( state, ...args );
+			const fulfill = resolver.fulfill ? resolver.fulfill : resolver;
+			let fulfillment = fulfill( state, ...args );
 
 			// Attempt to normalize fulfillment as async iterable.
 			fulfillment = toAsyncIterable( fulfillment );
@@ -158,7 +159,16 @@ export function registerResolvers( reducerKey, newResolvers ) {
 					store.dispatch( maybeAction );
 				}
 			}
-		} );
+		};
+
+		// Ensure single invocation per argument set via memoization
+		// or via isFulfilled call if provided.
+		const fulfill = resolver.isFulfilled ? ( ...args ) => {
+			const state = store.getState();
+			if ( ! resolver.isFulfilled( state, ...args ) ) {
+				rawFulfill( ...args );
+			}
+		} : memoize( rawFulfill );
 
 		return ( ...args ) => {
 			fulfill( ...args );
@@ -231,14 +241,18 @@ export function dispatch( reducerKey ) {
  *
  * @return {Component} Enhanced component with merged state data props.
  */
-export const withSelect = ( mapStateToProps ) => ( WrappedComponent ) => {
-	class ComponentWithSelect extends Component {
+export const withSelect = ( mapStateToProps ) => createHigherOrderComponent( ( WrappedComponent ) => {
+	return class ComponentWithSelect extends Component {
 		constructor() {
 			super( ...arguments );
 
 			this.runSelection = this.runSelection.bind( this );
 
 			this.state = {};
+		}
+
+		shouldComponentUpdate( nextProps, nextState ) {
+			return ! isShallowEqual( nextProps, this.props ) || ! isShallowEqual( nextState, this.state );
 		}
 
 		componentWillMount() {
@@ -286,12 +300,8 @@ export const withSelect = ( mapStateToProps ) => ( WrappedComponent ) => {
 		render() {
 			return <WrappedComponent { ...this.props } { ...this.state.mergeProps } />;
 		}
-	}
-
-	ComponentWithSelect.displayName = getWrapperDisplayName( WrappedComponent, 'select' );
-
-	return ComponentWithSelect;
-};
+	};
+}, 'withSelect' );
 
 /**
  * Higher-order component used to add dispatch props using registered action
@@ -305,8 +315,8 @@ export const withSelect = ( mapStateToProps ) => ( WrappedComponent ) => {
  *
  * @return {Component} Enhanced component with merged dispatcher props.
  */
-export const withDispatch = ( mapDispatchToProps ) => ( WrappedComponent ) => {
-	class ComponentWithDispatch extends Component {
+export const withDispatch = ( mapDispatchToProps ) => createHigherOrderComponent( ( WrappedComponent ) => {
+	return class ComponentWithDispatch extends Component {
 		constructor() {
 			super( ...arguments );
 
@@ -345,12 +355,8 @@ export const withDispatch = ( mapDispatchToProps ) => ( WrappedComponent ) => {
 		render() {
 			return <WrappedComponent { ...this.props } { ...this.proxyProps } />;
 		}
-	}
-
-	ComponentWithDispatch.displayName = getWrapperDisplayName( WrappedComponent, 'dispatch' );
-
-	return ComponentWithDispatch;
-};
+	};
+}, 'withDispatch' );
 
 /**
  * Returns true if the given argument appears to be a dispatchable action.

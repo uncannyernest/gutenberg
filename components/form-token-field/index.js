@@ -343,7 +343,7 @@ class FormTokenField extends Component {
 			tokens
 				.map( this.props.saveTransform )
 				.filter( Boolean )
-				.filter( token => ! this.valueContainsToken( token ) )
+				.filter( ( token ) => ! this.valueContainsToken( token ) )
 		);
 
 		if ( tokensToAdd.length > 0 ) {
@@ -504,7 +504,7 @@ class FormTokenField extends Component {
 	render() {
 		const {
 			disabled,
-			placeholder = _( 'Add item.' ),
+			placeholder = __( 'Add item.' ),
 			instanceId,
 		} = this.props;
 		const classes = classnames( 'components-form-token-field', {

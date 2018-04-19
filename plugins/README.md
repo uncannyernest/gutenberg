@@ -1,9 +1,10 @@
-Plugins API
-====
+# Plugins
+
+### Plugins API
 
 The plugins API contains the following methods:
 
-### `wp.plugins.registerPlugin( name: string, settings: Object )`
+#### `wp.plugins.registerPlugin( name: string, settings: Object )`
 
 This method registers a new plugin.
 
@@ -15,25 +16,27 @@ This method takes two arguments:
 
 See [the edit-post module documentation](../edit-post/) for available components.
 
-**Example**
+_Example:_
 
 ```jsx
 const { Fragment } = wp.element;
-const { PluginSidebar, PluginMoreMenuItem } = wp.editPost.__experimental;
+const { PluginSidebar, PluginSidebarMoreMenuItem } = wp.editPost;
 const { registerPlugin } = wp.plugins;
 
 const Component = () => (
 	<Fragment>
-		<PluginSidebar name="sidebar-name" title="My Sidebar">
+		<PluginSidebarMoreMenuItem
+			target="sidebar-name"
+			icon="smiley"
+		>
+			My Sidebar
+		</PluginSidebarMoreMenuItem>
+		<PluginSidebar
+			name="sidebar-name"
+			title="My Sidebar"
+		>
 			Content of the sidebar
 		</PluginSidebar>
-		<PluginMoreMenuItem
-			name="menu-item-name"
-			title="My Sidebar"
-			type="sidebar"
-			target="sidebar-name">
-			My Sidebar
-		</PluginMoreMenuItem>
 	</Fragment>
 );
 
@@ -42,10 +45,37 @@ registerPlugin( 'plugin-name', {
 } );
 ```
 
-### `wp.plugins.unregisterPlugin( name: string )`
+#### `wp.plugins.unregisterPlugin( name: string )`
 
 This method unregisters an existing plugin.
 
 This method takes one argument:
 
 1. `name`: A string identifying the plugin.
+
+_Example:_
+
+```js
+const { unregisterPlugin } = wp.plugins;
+
+unregisterPlugin( 'plugin-name' );
+```
+
+### Components
+
+#### `PluginArea`
+
+A component that renders all registered plugins in a hidden div.
+
+_Example:_
+
+```jsx
+const { PluginArea } = wp.plugins;
+
+const Layout = () => (
+	<div>
+		Content of the page
+		<PluginArea />
+	</div>
+);
+```

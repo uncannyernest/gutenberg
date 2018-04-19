@@ -1,25 +1,16 @@
 /**
- * External dependencies
- */
-import { createProvider } from 'react-redux';
-
-/**
  * WordPress dependencies
  */
 import { render, unmountComponentAtNode } from '@wordpress/element';
-import { EditorProvider, ErrorBoundary } from '@wordpress/editor';
 
 /**
  * Internal dependencies
  */
 import './assets/stylesheets/main.scss';
 import './hooks';
-import Layout from './components/layout';
 import store from './store';
 import { initializeMetaBoxState } from './store/actions';
-
-import PluginSidebar from './components/plugin-sidebar';
-import PluginMoreMenuItem from './components/plugin-more-menu-item';
+import Editor from './editor';
 
 /**
  * Configure heartbeat to refresh the wp-api nonce, keeping the editor
@@ -41,18 +32,10 @@ window.jQuery( document ).on( 'heartbeat-tick', ( event, response ) => {
  */
 export function reinitializeEditor( target, settings ) {
 	unmountComponentAtNode( target );
-
 	const reboot = reinitializeEditor.bind( null, target, settings );
-	const ReduxProvider = createProvider( 'edit-post' );
 
 	render(
-		<EditorProvider settings={ settings } recovery>
-			<ErrorBoundary onError={ reboot }>
-				<ReduxProvider store={ store }>
-					<Layout />
-				</ReduxProvider>
-			</ErrorBoundary>
-		</EditorProvider>,
+		<Editor settings={ settings } onError={ reboot } recovery />,
 		target
 	);
 }
@@ -72,16 +55,18 @@ export function reinitializeEditor( target, settings ) {
 export function initializeEditor( id, post, settings ) {
 	const target = document.getElementById( id );
 	const reboot = reinitializeEditor.bind( null, target, settings );
-	const ReduxProvider = createProvider( 'edit-post' );
+
+	if ( 'production' !== process.env.NODE_ENV ) {
+		// Remove with 3.0 release.
+		window.console.info(
+			'`isSelected` usage is no longer mandatory with `BlockControls`, `InspectorControls` and `RichText`. ' +
+			'It is now handled by the editor internally to ensure that controls are visible only when block is selected. ' +
+			'See updated docs: https://github.com/WordPress/gutenberg/blob/master/blocks/README.md#components.'
+		);
+	}
 
 	render(
-		<EditorProvider settings={ settings } post={ post }>
-			<ErrorBoundary onError={ reboot }>
-				<ReduxProvider store={ store }>
-					<Layout />
-				</ReduxProvider>
-			</ErrorBoundary>
-		</EditorProvider>,
+		<Editor settings={ settings } onError={ reboot } post={ post } />,
 		target
 	);
 
@@ -92,7 +77,5 @@ export function initializeEditor( id, post, settings ) {
 	};
 }
 
-export const __experimental = {
-	PluginSidebar,
-	PluginMoreMenuItem,
-};
+export { default as PluginSidebar } from './components/sidebar/plugin-sidebar';
+export { default as PluginSidebarMoreMenuItem } from './components/header/plugin-sidebar-more-menu-item';

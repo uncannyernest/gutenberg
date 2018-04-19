@@ -1,13 +1,12 @@
-.editor-block-list__block:not( .is-multi-selected ) .wp-block-paragraph {
-	background: white;
-}
-
 .blocks-font-size__main {
 	display: flex;
 	justify-content: space-between;
+	margin-bottom: 1em;
 }
 
-.blocks-font-size .blocks-range-control__slider + .dashicon {
-	width: 30px;
-	height: 30px;
+.blocks-paragraph__custom-size-slider {
+	.components-range-control__slider + .dashicon {
+		width: 30px;
+		height: 30px;
+	}
 }
