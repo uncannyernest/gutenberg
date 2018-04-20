@@ -30,13 +30,9 @@ export default function( node, doc, schema ) {
 		} else if ( fontStyle === 'italic' ) {
 			node = replaceTag( node, 'em', doc );
 		}
-	}
-
-	if ( node.nodeName === 'B' ) {
+	} else if ( node.nodeName === 'B' ) {
 		node = replaceTag( node, 'strong', doc );
-	}
-
-	if ( node.nodeName === 'I' ) {
+	} else if ( node.nodeName === 'I' ) {
 		node = replaceTag( node, 'em', doc );
 	}
 

@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { includes } from 'lodash';
+import { difference } from 'lodash';
 
 /**
  * Internal dependencies
@@ -9,42 +9,37 @@ import { includes } from 'lodash';
 import { isPhrasingContent } from './utils';
 
 /**
- * An array of tag groups used by isInlineForTag function.
- * If tagName and nodeName are present in the same group, the node should be treated as inline.
- * @type {Array}
+ * Checks if the given node should be considered inline content, optionally
+ * depending on a context tag.
+ *
+ * @param {Node}   node       Node name.
+ * @param {string} contextTag Tag name.
+ *
+ * @return {boolean} True if the node is inline content, false if nohe.
  */
-const inlineWhitelistTagGroups = [
-	[ 'ul', 'li', 'ol' ],
-	[ 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ],
-];
+function isInline( node, contextTag ) {
+	if ( isPhrasingContent( node ) ) {
+		return true;
+	}
 
-/**
- * Checks if nodeName should be treated as inline when being added to tagName.
- * This happens if nodeName and tagName are in the same group defined in phrasingContentTagGroups.
- *
- * @param {string} nodeName Node name.
- * @param {string} tagName  Tag name.
- *
- * @return {boolean} True if nodeName is inline in the context of tagName and
- *                    false otherwise.
- */
-function isInlineForTag( nodeName, tagName ) {
-	if ( ! tagName || ! nodeName ) {
+	if ( ! contextTag ) {
 		return false;
 	}
+
+	const tag = node.nodeName.toLowerCase();
+	const inlineWhitelistTagGroups = [
+		[ 'ul', 'li', 'ol' ],
+		[ 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ],
+	];
+
 	return inlineWhitelistTagGroups.some( ( tagGroup ) =>
-		includes( tagGroup, nodeName ) && includes( tagGroup, tagName )
+		difference( [ tag, contextTag ], tagGroup ).length === 0
 	);
 }
 
-function isInline( node, tagName ) {
-	const nodeName = node.nodeName.toLowerCase();
-	return isPhrasingContent( node ) || isInlineForTag( nodeName, tagName );
-}
-
-function deepCheck( nodes, tagName ) {
+function deepCheck( nodes, contextTag ) {
 	return nodes.every( ( node ) =>
-		isInline( node, tagName ) && deepCheck( Array.from( node.children ), tagName )
+		isInline( node, contextTag ) && deepCheck( Array.from( node.children ), contextTag )
 	);
 }
 
@@ -52,12 +47,12 @@ function isDoubleBR( node ) {
 	return node.nodeName === 'BR' && node.previousSibling && node.previousSibling.nodeName === 'BR';
 }
 
-export default function( HTML, tagName ) {
+export default function( HTML, contextTag ) {
 	const doc = document.implementation.createHTMLDocument( '' );
 
 	doc.body.innerHTML = HTML;
 
 	const nodes = Array.from( doc.body.children );
 
-	return ! nodes.some( isDoubleBR ) && deepCheck( nodes, tagName );
+	return ! nodes.some( isDoubleBR ) && deepCheck( nodes, contextTag );
 }

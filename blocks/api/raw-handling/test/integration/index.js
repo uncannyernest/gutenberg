@@ -24,6 +24,7 @@ const types = [
 	'one-image',
 	'two-images',
 	'markdown',
+	'wordpress',
 ];
 
 function readFile( filePath ) {

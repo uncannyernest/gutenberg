@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { omit, mergeWith } from 'lodash';
+import { omit, mergeWith, includes } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -13,6 +13,27 @@ import { unwrap, insertAfter, remove } from '@wordpress/utils';
  */
 const { ELEMENT_NODE, TEXT_NODE } = window.Node;
 
+const phrasingContentSchema = {
+	strong: {},
+	em: {},
+	del: {},
+	ins: {},
+	a: { attributes: [ 'href' ] },
+	code: {},
+	abbr: { attributes: [ 'title' ] },
+	sub: {},
+	sup: {},
+	br: {},
+	'#text': {},
+};
+
+// Recursion is needed.
+// Possible: strong > em > strong.
+// Impossible: strong > strong.
+[ 'strong', 'em', 'del', 'ins', 'a', 'code', 'abbr', 'sub', 'sup' ].forEach( ( tag ) => {
+	phrasingContentSchema[ tag ].children = omit( phrasingContentSchema, tag );
+} );
+
 /**
  * Get schema of possible paths for phrasing content.
  *
@@ -21,27 +42,6 @@ const { ELEMENT_NODE, TEXT_NODE } = window.Node;
  * @return {Object} Schema.
  */
 export function getPhrasingContentSchema() {
-	const phrasingContentSchema = {
-		strong: {},
-		em: {},
-		del: {},
-		ins: {},
-		a: { attributes: [ 'href' ] },
-		code: {},
-		abbr: { attributes: [ 'title' ] },
-		sub: {},
-		sup: {},
-		br: {},
-		[ TEXT_NODE ]: {},
-	};
-
-	// Recursion is needed.
-	// Possible: strong > em > strong.
-	// Impossible: strong > strong.
-	[ 'strong', 'em', 'del', 'ins', 'a', 'code', 'abbr', 'sub', 'sup' ].forEach( ( tag ) => {
-		phrasingContentSchema[ tag ].children = omit( phrasingContentSchema, tag );
-	} );
-
 	return phrasingContentSchema;
 }
 
@@ -119,7 +119,7 @@ export function isEmpty( element ) {
  * @return {boolean} Wether the HTML can be considered plain text.
  */
 export function isPlain( HTML ) {
-	return ! /<(?!br)/i.test( HTML );
+	return ! /<(?!br[ />])/i.test( HTML );
 }
 
 /**
@@ -179,7 +179,7 @@ function cleanNodeList( nodeList, doc, schema, inline ) {
 		const tag = node.nodeName.toLowerCase();
 
 		// It's a valid child.
-		if ( schema.hasOwnProperty( tag ) || schema.hasOwnProperty( node.nodeType ) ) {
+		if ( schema.hasOwnProperty( tag ) ) {
 			if ( node.nodeType === ELEMENT_NODE ) {
 				const { attributes = [], classes = [], children, require = [] } = schema[ tag ];
 
@@ -190,24 +190,30 @@ function cleanNodeList( nodeList, doc, schema, inline ) {
 					return;
 				}
 
-				// Strip invalid attributes.
-				Array.from( node.attributes ).forEach( ( { name } ) => {
-					if ( name !== 'class' && attributes.indexOf( name ) === -1 ) {
-						node.removeAttribute( name );
+				if ( node.hasAttributes() ) {
+					// Strip invalid attributes.
+					Array.from( node.attributes ).forEach( ( { name } ) => {
+						if ( name !== 'class' && ! includes( attributes, name ) ) {
+							node.removeAttribute( name );
+						}
+					} );
+
+					// Strip invalid classes.
+					if ( node.classList.length ) {
+						const newClasses = classes.filter( ( name ) =>
+							node.classList.contains( name )
+						);
+
+						if ( newClasses.length ) {
+							node.setAttribute( 'class', newClasses.join( ' ' ) );
+						} else {
+							node.removeAttribute( 'class' );
+						}
 					}
-				} );
-
-				// Strip invalid classes.
-				const newClasses = classes.filter( ( name ) => node.classList.contains( name ) );
-
-				if ( newClasses.length ) {
-					node.setAttribute( 'class', newClasses.join( ' ' ) );
-				} else {
-					node.removeAttribute( 'class' );
 				}
 
 				if ( node.hasChildNodes() ) {
-					// Contine if the node is supposed to have children.
+					// Continue if the node is supposed to have children.
 					if ( children ) {
 						// If a parent requires certain children, but it does
 						// not have them, drop the parent and continue.

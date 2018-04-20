@@ -53,10 +53,15 @@ describe( 'isPlain', () => {
 
 	it( 'should return true for only line breaks', () => {
 		equal( isPlain( 'test<br>test' ), true );
+		equal( isPlain( 'test<br/>test' ), true );
+		equal( isPlain( 'test<br />test' ), true );
+		equal( isPlain( 'test<br data-test>test' ), true );
 	} );
 
 	it( 'should return false for formatted text', () => {
 		equal( isPlain( '<strong>test</strong>' ), false );
+		equal( isPlain( '<strong>test<br></strong>' ), false );
+		equal( isPlain( 'test<br-custom>test' ), false );
 	} );
 } );
 

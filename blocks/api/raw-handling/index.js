@@ -2,12 +2,7 @@
  * External dependencies
  */
 import showdown from 'showdown';
-import { find, flatMap, filter } from 'lodash';
-
-/**
- * WordPress dependencies
- */
-import { unwrap } from '@wordpress/utils';
+import { find, flatMap, filter, compact } from 'lodash';
 
 /**
  * Internal dependencies
@@ -23,9 +18,10 @@ import msListConverter from './ms-list-converter';
 import listReducer from './list-reducer';
 import imageCorrector from './image-corrector';
 import blockquoteNormaliser from './blockquote-normaliser';
-import embeddedContentReducer from './embedded-content-reducer';
+import figureContentReducer from './figure-content-reducer';
 import shortcodeConverter from './shortcode-converter';
 import slackMarkdownVariantCorrector from './slack-markdown-variant-corrector';
+import iframeRemover from './iframe-remover';
 import {
 	deepFilterHTML,
 	isPlain,
@@ -33,6 +29,11 @@ import {
 	getPhrasingContentSchema,
 	getBlockContentSchema,
 } from './utils';
+
+/**
+ * Browser dependencies
+ */
+const { log, warn } = window.console;
 
 export { getPhrasingContentSchema };
 
@@ -70,17 +71,19 @@ function filterInlineHTML( HTML ) {
 	HTML = removeInvalidHTML( HTML, getPhrasingContentSchema(), { inline: true } );
 
 	// Allows us to ask for this information when we get a report.
-	window.console.log( 'Processed inline HTML:\n\n', HTML );
+	log( 'Processed inline HTML:\n\n', HTML );
 
 	return HTML;
 }
 
 function getRawTransformations() {
 	return filter( getBlockTransforms( 'from' ), { type: 'raw' } )
-		.map( ( transform ) => ( {
-			isMatch: ( node ) => transform.selector && node.matches( transform.selector ),
-			...transform,
-		} ) );
+		.map( ( transform ) => {
+			return transform.isMatch ? transform : {
+				...transform,
+				isMatch: ( node ) => transform.selector && node.matches( transform.selector ),
+			};
+		} );
 }
 
 /**
@@ -127,6 +130,10 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 		}
 	}
 
+	if ( mode === 'INLINE' ) {
+		return filterInlineHTML( HTML );
+	}
+
 	// An array of HTML strings and block objects. The blocks replace matched
 	// shortcodes.
 	const pieces = shortcodeConverter( HTML );
@@ -136,10 +143,6 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 	// empty HTML strings are included.
 	const hasShortcodes = pieces.length > 1;
 
-	if ( mode === 'INLINE' ) {
-		return filterInlineHTML( HTML );
-	}
-
 	if ( mode === 'AUTO' && ! hasShortcodes && isInlineContent( HTML, tagName ) ) {
 		return filterInlineHTML( HTML );
 	}
@@ -148,7 +151,7 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 	const phrasingContentSchema = getPhrasingContentSchema();
 	const blockContentSchema = getBlockContentSchema( rawTransformations );
 
-	return flatMap( pieces, ( piece ) => {
+	return compact( flatMap( pieces, ( piece ) => {
 		// Already a block from shortcode.
 		if ( typeof piece !== 'string' ) {
 			return piece;
@@ -160,14 +163,13 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 			imageCorrector,
 			phrasingContentReducer,
 			specialCommentConverter,
-			embeddedContentReducer,
+			figureContentReducer,
 			blockquoteNormaliser,
 		];
 
 		if ( ! canUserUseUnfilteredHTML ) {
-			filters.unshift( ( node ) =>
-				node.nodeName === 'iframe' && unwrap( node )
-			);
+			// Should run before `figureContentReducer`.
+			filters.unshift( iframeRemover );
 		}
 
 		const schema = {
@@ -181,15 +183,26 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 		piece = normaliseBlocks( piece );
 
 		// Allows us to ask for this information when we get a report.
-		window.console.log( 'Processed HTML piece:\n\n', piece );
+		log( 'Processed HTML piece:\n\n', piece );
 
 		const doc = document.implementation.createHTMLDocument( '' );
 
 		doc.body.innerHTML = piece;
 
 		return Array.from( doc.body.children ).map( ( node ) => {
-			const { transform, blockName } =
-				find( rawTransformations, ( { isMatch } ) => isMatch( node ) );
+			const rawTransformation = find( rawTransformations, ( { isMatch } ) => isMatch( node ) );
+
+			if ( ! rawTransformation ) {
+				warn(
+					'A block registered a raw transformation schema for `' + node.nodeName + '` but did not match it. ' +
+					'Make sure there is a `selector` or `isMatch` property that can match the schema.\n' +
+					'Sanitized HTML: `' + node.outerHTML + '`'
+				);
+
+				return;
+			}
+
+			const { transform, blockName } = rawTransformation;
 
 			if ( transform ) {
 				return transform( node );
@@ -203,5 +216,5 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 				)
 			);
 		} );
-	} );
+	} ) );
 }
