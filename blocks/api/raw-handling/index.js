@@ -1,7 +1,6 @@
 /**
  * External dependencies
  */
-import showdown from 'showdown';
 import { find, flatMap, filter, compact } from 'lodash';
 
 /**
@@ -20,7 +19,7 @@ import imageCorrector from './image-corrector';
 import blockquoteNormaliser from './blockquote-normaliser';
 import figureContentReducer from './figure-content-reducer';
 import shortcodeConverter from './shortcode-converter';
-import slackMarkdownVariantCorrector from './slack-markdown-variant-corrector';
+import markdownConverter from './markdown-converter';
 import iframeRemover from './iframe-remover';
 import {
 	deepFilterHTML,
@@ -36,28 +35,6 @@ import {
 const { log, warn } = window.console;
 
 export { getPhrasingContentSchema };
-
-/**
- * Converts a piece of text into HTML based on any Markdown present.
- * Also decodes any encoded HTML.
- *
- * @param {string} text The plain text to convert.
- *
- * @return {string} HTML.
- */
-function convertMarkdown( text ) {
-	const converter = new showdown.Converter();
-
-	converter.setOption( 'noHeaderId', true );
-	converter.setOption( 'tables', true );
-	converter.setOption( 'literalMidWordUnderscores', true );
-	converter.setOption( 'omitExtraWLInCodeBlocks', true );
-	converter.setOption( 'simpleLineBreaks', true );
-
-	text = slackMarkdownVariantCorrector( text );
-
-	return converter.makeHtml( text );
-}
 
 /**
  * Filters HTML to only contain phrasing content.
@@ -113,7 +90,7 @@ export default function rawHandler( { HTML = '', plainText = '', mode = 'AUTO', 
 	// * There is a plain text version.
 	// * There is no HTML version, or it has no formatting.
 	if ( plainText && ( ! HTML || isPlain( HTML ) ) ) {
-		HTML = convertMarkdown( plainText );
+		HTML = markdownConverter( plainText );
 
 		// Switch to inline mode if:
 		// * The current mode is AUTO.
