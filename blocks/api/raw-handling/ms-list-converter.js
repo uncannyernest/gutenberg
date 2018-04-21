@@ -2,17 +2,12 @@
  * Browser dependencies
  */
 const { parseInt } = window;
-const { ELEMENT_NODE } = window.Node;
 
 function isList( node ) {
 	return node.nodeName === 'OL' || node.nodeName === 'UL';
 }
 
 export default function( node, doc ) {
-	if ( node.nodeType !== ELEMENT_NODE ) {
-		return;
-	}
-
 	if ( node.nodeName !== 'P' ) {
 		return;
 	}

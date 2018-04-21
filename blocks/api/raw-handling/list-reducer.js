@@ -3,11 +3,6 @@
  */
 import { unwrap } from '@wordpress/utils';
 
-/**
- * Browser dependencies
- */
-const { ELEMENT_NODE } = window.Node;
-
 function isList( node ) {
 	return node.nodeName === 'OL' || node.nodeName === 'UL';
 }
@@ -19,10 +14,6 @@ function shallowTextContent( element ) {
 }
 
 export default function( node ) {
-	if ( node.nodeType !== ELEMENT_NODE ) {
-		return;
-	}
-
 	if ( ! isList( node ) ) {
 		return;
 	}

@@ -8,20 +8,11 @@ import { unwrap, replaceTag } from '@wordpress/utils';
  */
 import { isPhrasingContent } from './utils';
 
-/**
- * Browser dependencies
- */
-const { ELEMENT_NODE } = window.Node;
-
 function isBlockContent( node, schema = {} ) {
 	return schema.hasOwnProperty( node.nodeName.toLowerCase() );
 }
 
 export default function( node, doc, schema ) {
-	if ( node.nodeType !== ELEMENT_NODE ) {
-		return;
-	}
-
 	if ( node.nodeName === 'SPAN' ) {
 		const { fontWeight, fontStyle } = node.style;
 

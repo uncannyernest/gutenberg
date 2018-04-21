@@ -9,11 +9,6 @@ import { has } from 'lodash';
 import { isPhrasingContent } from './utils';
 
 /**
- * Browser dependencies
- */
-const { ELEMENT_NODE } = window.Node;
-
-/**
  * Whether or not the given node is figure content.
  *
  * @param {Node}   node   The node to check.
@@ -58,10 +53,6 @@ function canHaveAnchor( node, schema ) {
  * @return {void}
  */
 export default function( node, doc, schema ) {
-	if ( node.nodeType !== ELEMENT_NODE ) {
-		return;
-	}
-
 	if ( ! isFigureContent( node, schema ) ) {
 		return;
 	}
