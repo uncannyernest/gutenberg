@@ -78,7 +78,6 @@ const {
 	getStateBeforeOptimisticTransaction,
 	isPublishingPost,
 	getInserterItems,
-	getFrecentInserterItems,
 	getProvisionalBlockUID,
 	isValidTemplate,
 	getTemplate,
@@ -2516,222 +2515,113 @@ describe( 'selectors', () => {
 	} );
 
 	describe( 'getInserterItems', () => {
-		it( 'should list all non-private regular block types', () => {
-			const state = {
-				editor: {
-					present: {
-						blocksByUid: {},
-						blockOrder: {},
-						edits: {},
-					},
-				},
-				currentPost: {},
-				sharedBlocks: {
-					data: {},
-				},
-			};
+		// it( 'should list all non-private regular block types', () => {
+		// 	const state = {
+		// 		editor: {
+		// 			present: {
+		// 				blocksByUid: {},
+		// 				blockOrder: {},
+		// 				edits: {},
+		// 			},
+		// 		},
+		// 		currentPost: {},
+		// 		sharedBlocks: {
+		// 			data: {},
+		// 		},
+		// 	};
 
-			const blockTypes = getBlockTypes().filter( ( blockType ) => ! blockType.isPrivate );
-			expect( getInserterItems( state, true ) ).toHaveLength( blockTypes.length );
-		} );
+		// 	const blockTypes = getBlockTypes().filter( blockType => ! blockType.isPrivate );
+		// 	expect( getInserterItems( state, true ) ).toHaveLength( blockTypes.length );
+		// } );
 
-		it( 'should properly list a regular block type', () => {
-			const state = {
-				editor: {
-					present: {
-						blocksByUid: {},
-						blockOrder: {},
-						edits: {},
-					},
-				},
-				currentPost: {},
-				sharedBlocks: {
-					data: {},
-				},
-			};
+		// it( 'should properly list a regular block type', () => {
+		// 	const state = {
+		// 		editor: {
+		// 			present: {
+		// 				blocksByUid: {},
+		// 				blockOrder: {},
+		// 				edits: {},
+		// 			},
+		// 		},
+		// 		currentPost: {},
+		// 		sharedBlocks: {
+		// 			data: {},
+		// 		},
+		// 	};
 
-			expect( getInserterItems( state, [ 'core/test-block' ] ) ).toEqual( [
-				{
-					id: 'core/test-block',
-					name: 'core/test-block',
-					initialAttributes: {},
-					title: 'test block',
-					icon: 'test',
-					category: 'common',
-					keywords: [ 'testing' ],
-					isDisabled: false,
-				},
-			] );
-		} );
+		// 	expect( getInserterItems( state, [ 'core/test-block' ] ) ).toEqual( [
+		// 		{
+		// 			id: 'core/test-block',
+		// 			name: 'core/test-block',
+		// 			initialAttributes: {},
+		// 			title: 'test block',
+		// 			icon: 'test',
+		// 			category: 'common',
+		// 			keywords: [ 'testing' ],
+		// 			isDisabled: false,
+		// 		},
+		// 	] );
+		// } );
 
-		it( 'should set isDisabled when a regular block type with useOnce has been used', () => {
-			const state = {
-				editor: {
-					present: {
-						blocksByUid: {
-							1: { uid: 1, name: 'core/test-block', attributes: {} },
-						},
-						blockOrder: {
-							'': [ 1 ],
-						},
-						edits: {},
-					},
-				},
-				currentPost: {},
-				sharedBlocks: {
-					data: {},
-				},
-			};
+		// it( 'should set isDisabled when a regular block type with useOnce has been used', () => {
+		// 	const state = {
+		// 		editor: {
+		// 			present: {
+		// 				blocksByUid: {
+		// 					1: { uid: 1, name: 'core/test-block', attributes: {} },
+		// 				},
+		// 				blockOrder: {
+		// 					'': [ 1 ],
+		// 				},
+		// 				edits: {},
+		// 			},
+		// 		},
+		// 		currentPost: {},
+		// 		sharedBlocks: {
+		// 			data: {},
+		// 		},
+		// 	};
 
-			const items = getInserterItems( state, [ 'core/test-block' ] );
-			expect( items[ 0 ].isDisabled ).toBe( true );
-		} );
+		// 	const items = getInserterItems( state, [ 'core/test-block' ] );
+		// 	expect( items[ 0 ].isDisabled ).toBe( true );
+		// } );
 
-		it( 'should properly list shared blocks', () => {
-			const state = {
-				editor: {
-					present: {
-						blocksByUid: {
-							carrot: { name: 'core/test-block' },
-						},
-						blockOrder: {},
-						edits: {},
-					},
-				},
-				currentPost: {},
-				sharedBlocks: {
-					data: {
-						123: { uid: 'carrot', title: 'My shared block' },
-					},
-				},
-			};
+		// it( 'should properly list shared blocks', () => {
+		// 	const state = {
+		// 		editor: {
+		// 			present: {
+		// 				blocksByUid: {
+		// 					carrot: { name: 'core/test-block' },
+		// 				},
+		// 				blockOrder: {},
+		// 				edits: {},
+		// 			},
+		// 		},
+		// 		currentPost: {},
+		// 		sharedBlocks: {
+		// 			data: {
+		// 				123: { uid: 'carrot', title: 'My shared block' },
+		// 			},
+		// 		},
+		// 	};
 
-			expect( getInserterItems( state, [ 'core/block' ] ) ).toEqual( [
-				{
-					id: 'core/block/123',
-					name: 'core/block',
-					initialAttributes: { ref: 123 },
-					title: 'My shared block',
-					icon: 'test',
-					category: 'shared',
-					keywords: [],
-					isDisabled: false,
-				},
-			] );
-		} );
+		// 	expect( getInserterItems( state, [ 'core/block' ] ) ).toEqual( [
+		// 		{
+		// 			id: 'core/block/123',
+		// 			name: 'core/block',
+		// 			initialAttributes: { ref: 123 },
+		// 			title: 'My shared block',
+		// 			icon: 'test',
+		// 			category: 'shared',
+		// 			keywords: [],
+		// 			isDisabled: false,
+		// 		},
+		// 	] );
+		// } );
 
-		it( 'should return nothing when all block types are disabled', () => {
-			expect( getInserterItems( {}, false ) ).toEqual( [] );
-		} );
-	} );
-
-	describe( 'getFrecentInserterItems', () => {
-		beforeAll( () => {
-			registerCoreBlocks();
-		} );
-
-		it( 'should return the most frecently used blocks', () => {
-			const state = {
-				preferences: {
-					insertUsage: {
-						'core/deleted-block': { time: 1000, count: 10, insert: { name: 'core/deleted-block' } }, // Deleted blocks should be filtered out
-						'core/block/456': { time: 1000, count: 4, insert: { name: 'core/block', ref: 456 } }, // Deleted shared blocks should be filtered out
-						'core/image': { time: 1000, count: 3, insert: { name: 'core/image' } },
-						'core/block/123': { time: 1000, count: 5, insert: { name: 'core/block', ref: 123 } },
-						'core/paragraph': { time: 1000, count: 2, insert: { name: 'core/paragraph' } },
-					},
-				},
-				editor: {
-					present: {
-						blocksByUid: {
-							carrot: { name: 'core/test-block' },
-						},
-						blockOrder: [],
-						edits: {},
-					},
-				},
-				sharedBlocks: {
-					data: {
-						123: { uid: 'carrot' },
-					},
-				},
-				currentPost: {},
-			};
-
-			expect( getFrecentInserterItems( state, true, 3 ) ).toMatchObject( [
-				{ name: 'core/block', initialAttributes: { ref: 123 } },
-				{ name: 'core/image', initialAttributes: {} },
-				{ name: 'core/paragraph', initialAttributes: {} },
-			] );
-		} );
-
-		it( 'should weight by time', () => {
-			const state = {
-				preferences: {
-					insertUsage: {
-						'core/image': { time: Date.now() - 1000, count: 2, insert: { name: 'core/image' } },
-						'core/paragraph': { time: Date.now() - 4000, count: 3, insert: { name: 'core/paragraph' } },
-					},
-				},
-				editor: {
-					present: {
-						blockOrder: [],
-					},
-				},
-				sharedBlocks: {
-					data: {},
-				},
-			};
-
-			expect( getFrecentInserterItems( state, true, 2 ) ).toMatchObject( [
-				{ name: 'core/image', initialAttributes: {} },
-				{ name: 'core/paragraph', initialAttributes: {} },
-			] );
-		} );
-
-		it( 'should be backwards-compatible with old preferences values', () => {
-			const state = {
-				preferences: {
-					insertUsage: {
-						'core/image': { time: Date.now(), count: 1, insert: { name: 'core/image' } },
-						'core/paragraph': { time: undefined, count: 5, insert: { name: 'core/paragraph' } },
-					},
-				},
-				editor: {
-					present: {
-						blockOrder: [],
-					},
-				},
-				sharedBlocks: {
-					data: {},
-				},
-			};
-
-			expect( getFrecentInserterItems( state, true, 2 ) ).toMatchObject( [
-				{ name: 'core/paragraph', initialAttributes: {} },
-				{ name: 'core/image', initialAttributes: {} },
-			] );
-		} );
-
-		it( 'should pad list out with blocks from the common category', () => {
-			const state = {
-				preferences: {
-					insertUsage: {
-						'core/image': { time: 1000, count: 2, insert: { name: 'core/paragraph' } },
-					},
-				},
-				editor: {
-					present: {
-						blockOrder: [],
-					},
-				},
-			};
-
-			// We should get back 4 items with no duplicates
-			const items = getFrecentInserterItems( state, true, 4 );
-			const blockNames = items.map( ( item ) => item.name );
-			expect( union( blockNames ) ).toHaveLength( 4 );
-		} );
+		// it( 'should return nothing when all block types are disabled', () => {
+		// 	expect( getInserterItems( {}, false ) ).toEqual( [] );
+		// } );
 	} );
 
 	describe( 'getSharedBlock', () => {
@@ -3212,94 +3102,6 @@ describe( 'selectors', () => {
 			};
 
 			expect( getBlockListSettings( state, 'chicken' ) ).toBe( undefined );
-		} );
-	} );
-
-	describe( 'getSupportedBlocks', () => {
-		it( 'should return false if all blocks are disabled globally', () => {
-			const state = {
-				blockListSettings: {
-					block1: {
-						supportedBlocks: [ 'core/block1' ],
-					},
-				},
-			};
-
-			expect( getSupportedBlocks( state, 'block1', false ) ).toBe( false );
-		} );
-
-		it( 'should return the supportedBlocks of root block if all blocks are supported globally', () => {
-			const state = {
-				blockListSettings: {
-					block1: {
-						supportedBlocks: [ 'core/block1' ],
-					},
-				},
-			};
-
-			expect( getSupportedBlocks( state, 'block1', true ) ).toEqual( [ 'core/block1' ] );
-		} );
-
-		it( 'should return the globally supported blocks if all blocks are enable inside the root block', () => {
-			const state = {
-				blockListSettings: {
-					block1: {
-						supportedBlocks: true,
-					},
-				},
-			};
-
-			expect( getSupportedBlocks( state, 'block1', [ 'core/block1' ] ) ).toEqual( [ 'core/block1' ] );
-		} );
-
-		it( 'should return the globally supported blocks if the root block does not sets the supported blocks', () => {
-			const state = {
-				blockListSettings: {
-					block1: {
-						chicken: 'ribs',
-					},
-				},
-			};
-
-			expect( getSupportedBlocks( state, 'block1', [ 'core/block1' ] ) ).toEqual( [ 'core/block1' ] );
-		} );
-
-		it( 'should return the globally supported blocks if there are no settings for the root block', () => {
-			const state = {
-				blockListSettings: {
-					block1: {
-						supportedBlocks: true,
-					},
-				},
-			};
-
-			expect( getSupportedBlocks( state, 'block2', [ 'core/block1' ] ) ).toEqual( [ 'core/block1' ] );
-		} );
-
-		it( 'should return false if all blocks are disabled inside the root block ', () => {
-			const state = {
-				blockListSettings: {
-					block1: {
-						supportedBlocks: false,
-					},
-				},
-			};
-
-			expect( getSupportedBlocks( state, 'block1', [ 'core/block1' ] ) ).toBe( false );
-		} );
-
-		it( 'should return the intersection of globally supported blocks with the supported blocks of the root block if both sets are defined', () => {
-			const state = {
-				blockListSettings: {
-					block1: {
-						supportedBlocks: [ 'core/block1', 'core/block2', 'core/block3' ],
-					},
-				},
-			};
-
-			expect( getSupportedBlocks( state, 'block1', [ 'core/block2', 'core/block4', 'core/block5' ] ) ).toEqual(
-				[ 'core/block2' ]
-			);
 		} );
 	} );
 } );
