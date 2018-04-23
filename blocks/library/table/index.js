@@ -2,6 +2,7 @@
  * External dependencies
  */
 import { __ } from '@wordpress/i18n';
+import classnames from 'classnames';
 
 /**
  * WordPress dependencies
@@ -11,7 +12,6 @@ import {
 	PanelBody,
 	ToggleControl,
 } from '@wordpress/components';
-import classnames from 'classnames';
 
 /**
  * Internal dependencies
@@ -39,8 +39,8 @@ export const settings = {
 			selector: 'table',
 			default: [
 				<tbody key="1">
-					<tr><td><br /></td><td><br /></td><td><br /></td></tr>
-					<tr><td><br /></td><td><br /></td><td><br /></td></tr>
+					<tr><td><br /></td><td><br /></td></tr>
+					<tr><td><br /></td><td><br /></td></tr>
 				</tbody>,
 			],
 		},
@@ -119,8 +119,8 @@ export const settings = {
 			className,
 			{
 				'has-fixed-layout': hasFixedLayout,
+				[ `align${ align }` ]: align,
 			},
-			align ? `align${ align }` : null,
 		);
 
 		return (
