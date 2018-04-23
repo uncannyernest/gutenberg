@@ -51,11 +51,11 @@ class Modal extends Component {
 
 	render() {
 		const { height } = this.state;
-		const { icon, title, children, onRequestClose, render, shouldCloseOnEsc, shouldCloseOnClickOutside, parentSelector } = this.props;
+		const { className, overlayClassName, icon, title, children, onRequestClose, render, shouldCloseOnEsc, shouldCloseOnClickOutside, parentSelector } = this.props;
 		return <ReactModal
 			isOpen={ this.state.isOpen }
-			className={ 'edit-post-plugin-screen-takeover__editor-screen-takeover' }
-			overlayClassName={ 'edit-post-plugin-screen-takeover__editor-screen-takeover-overlay' }
+			className={ className }
+			overlayClassName={ overlayClassName }
 			parentSelector={ parentSelector }
 			render={ render }
 			onRequestClose={ onRequestClose ? onRequestClose : this.onClose }
@@ -76,8 +76,8 @@ class Modal extends Component {
 }
 
 Modal.defaultProps = {
-	className: null,
-	overlayClassName: null,
+	className: 'edit-post-plugin-screen-takeover__editor-screen-takeover',
+	overlayClassName: 'edit-post-plugin-screen-takeover__editor-screen-takeover-overlay',
 	onRequestClose: this.onClose,
 	render: true,
 	shouldCloseOnEsc: true,
