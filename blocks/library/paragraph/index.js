@@ -30,8 +30,6 @@ import {
 import './editor.scss';
 import './style.scss';
 import { createBlock } from '../../api';
-import { blockAutocompleter } from '../../autocompleters';
-import { defaultAutocompleters } from '../../hooks/default-autocompleters';
 import AlignmentToolbar from '../../alignment-toolbar';
 import BlockAlignmentToolbar from '../../block-alignment-toolbar';
 import BlockControls from '../../block-controls';
@@ -60,8 +58,6 @@ const FONT_SIZES = {
 	large: 36,
 	larger: 48,
 };
-
-const autocompleters = [ blockAutocompleter, ...defaultAutocompleters ];
 
 class ParagraphBlock extends Component {
 	constructor() {
@@ -258,7 +254,6 @@ class ParagraphBlock extends Component {
 						onReplace={ this.onReplace }
 						onRemove={ () => onReplace( [] ) }
 						placeholder={ placeholder || __( 'Add text or type / to add content' ) }
-						autocompleters={ autocompleters }
 					/>
 				</div>
 			</Fragment>
